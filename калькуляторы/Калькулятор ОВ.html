@@ -1,0 +1,223 @@
+
+
+  <h2>💨 Калькулятор расхода воздуха</h2>
+
+  <label>Тип канала:</label>
+  <select id="shape" onchange="toggleShapeFields()">
+    <option value="rectangular">Прямоугольный</option>
+    <option value="round">Круглый</option>
+  </select>
+
+  <div id="rectangular-fields">
+    <label>Ширина (мм):</label>
+    <input type="number" id="width" placeholder="например, 400">
+    <label>Высота (мм):</label>
+    <input type="number" id="height" placeholder="например, 200">
+  </div>
+
+  <div id="round-fields" style="display:none">
+    <label>Диаметр (мм):</label>
+    <input type="number" id="diameter" placeholder="например, 250">
+  </div>
+
+  <label>Что известно?</label>
+  <select id="known" onchange="toggleCalculationMode()">
+    <option value="velocity">Скорость (м/с)</option>
+    <option value="flow">Расход (м³/ч)</option>
+  </select>
+
+  <div id="velocity-input">
+    <label>Скорость воздуха (м/с):</label>
+    <input type="number" id="velocity" step="0.1">
+  </div>
+
+  <div id="flow-input" style="display:none">
+    <label>Расход воздуха (м³/ч):</label>
+    <input type="number" id="flowrate" step="0.1">
+  </div>
+
+  <button onclick="calculate()">Рассчитать</button>
+
+  <h3>Результат:</h3>
+  <p id="result"></p>
+
+  <script>
+    function toggleShapeFields() {
+      const shape = document.getElementById('shape').value;
+      document.getElementById('rectangular-fields').style.display = shape === 'rectangular' ? 'block' : 'none';
+      document.getElementById('round-fields').style.display = shape === 'round' ? 'block' : 'none';
+    }
+
+    function toggleCalculationMode() {
+      const known = document.getElementById('known').value;
+      document.getElementById('velocity-input').style.display = known === 'velocity' ? 'block' : 'none';
+      document.getElementById('flow-input').style.display = known === 'flow' ? 'block' : 'none';
+    }
+
+    function calculate() {
+      const shape = document.getElementById('shape').value;
+      const known = document.getElementById('known').value;
+      let area = 0;
+
+      // Площадь канала
+      if (shape === 'rectangular') {
+        const width = parseFloat(document.getElementById('width').value) / 1000;
+        const height = parseFloat(document.getElementById('height').value) / 1000;
+        if (isNaN(width) || isNaN(height)) {
+          document.getElementById('result').innerText = 'Введите размеры канала.';
+          return;
+        }
+        area = width * height;
+      } else {
+        const d = parseFloat(document.getElementById('diameter').value) / 1000;
+        if (isNaN(d)) {
+          document.getElementById('result').innerText = 'Введите диаметр канала.';
+          return;
+        }
+        area = Math.PI * (d / 2) ** 2;
+      }
+
+      // Расчёт
+      if (known === 'velocity') {
+        const v = parseFloat(document.getElementById('velocity').value);
+        if (isNaN(v)) {
+          document.getElementById('result').innerText = 'Введите скорость.';
+          return;
+        }
+        const q_m3s = v * area;
+        const q_m3h = q_m3s * 3600;
+        document.getElementById('result').innerHTML = 
+          `Расход: <strong>${q_m3s.toFixed(3)} м³/с</strong> или <strong>${q_m3h.toFixed(1)} м³/ч</strong>`;
+      } else {
+        const q_m3h = parseFloat(document.getElementById('flowrate').value);
+        if (isNaN(q_m3h)) {
+          document.getElementById('result').innerText = 'Введите расход.';
+          return;
+        }
+        const q_m3s = q_m3h / 3600;
+        const v = q_m3s / area;
+        document.getElementById('result').innerHTML = 
+          `Скорость: <strong>${v.toFixed(2)} м/с</strong> при расходе <strong>${q_m3h.toFixed(1)} м³/ч</strong>`;
+      }
+    }
+  </script>
+
+</body>
+</html>
+
+
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Расчёт мощности теплообменника</title>
+  <style>
+    body { font-family: Arial; max-width: 500px; padding: 20px; }
+    label, input { display: block; width: 100%; margin-bottom: 10px; }
+    button { padding: 10px; }
+  </style>
+</head>
+<body>
+
+  <h2>🔥 Калькулятор теплообменника</h2>
+
+  <label>Массовый расход теплоносителя (кг/с):</label>
+  <input type="number" id="massFlow" placeholder="например, 0.5">
+
+  <label>Температура на входе (°C):</label>
+  <input type="number" id="tempIn" placeholder="например, 70">
+
+  <label>Температура на выходе (°C):</label>
+  <input type="number" id="tempOut" placeholder="например, 50">
+
+  <label>Теплоёмкость (по умолчанию 4180 Дж/кг·°C):</label>
+  <input type="number" id="cp" placeholder="например, 4180" value="4180">
+
+  <button onclick="calculateHeat()">Рассчитать</button>
+
+  <h3>Результат:</h3>
+  <p id="result"></p>
+
+  <script>
+    function calculateHeat() {
+      const m = parseFloat(document.getElementById('massFlow').value);
+      const Tin = parseFloat(document.getElementById('tempIn').value);
+      const Tout = parseFloat(document.getElementById('tempOut').value);
+      const cp = parseFloat(document.getElementById('cp').value);
+
+      if (isNaN(m) || isNaN(Tin) || isNaN(Tout) || isNaN(cp)) {
+        document.getElementById('result').innerText = '❌ Заполните все поля.';
+        return;
+      }
+
+      const deltaT = Tin - Tout;
+      const Q = m * cp * deltaT; // Вт
+      const Q_kW = Q / 1000;
+
+      document.getElementById('result').innerHTML = 
+        `Мощность теплообменника: <strong>${Q.toFixed(0)} Вт</strong> или <strong>${Q_kW.toFixed(2)} кВт</strong>`;
+    }
+  </script>
+
+</body>
+</html>
+
+
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Калькулятор подбора охлаждающего блока</title>
+  <style>
+    body { font-family: Arial; max-width: 600px; margin: 20px auto; }
+    label, input { display: block; width: 100%; margin-bottom: 10px; }
+    button { padding: 10px; margin-top: 10px; }
+  </style>
+</head>
+<body>
+
+  <h2>❄️ Подбор охлаждающего блока</h2>
+
+  <label>Требуемая мощность охлаждения (кВт):</label>
+  <input type="number" id="requiredPower" placeholder="например, 18">
+
+  <button onclick="selectCoolingUnit()">Подобрать блок</button>
+
+  <h3>Результат:</h3>
+  <p id="result"></p>
+
+  <script>
+    function selectCoolingUnit() {
+      const requiredPower = parseFloat(document.getElementById('requiredPower').value);
+
+      if (isNaN(requiredPower) || requiredPower <= 0) {
+        document.getElementById('result').innerText = '❌ Введите корректную мощность.';
+        return;
+      }
+
+      // Таблица моделей
+      const units = [
+        { model: 'AC-100', power: 10, flow: 1000 },
+        { model: 'AC-200', power: 20, flow: 2000 },
+        { model: 'AC-300', power: 30, flow: 3000 },
+        { model: 'AC-500', power: 50, flow: 5000 }
+      ];
+
+      // Поиск подходящей модели
+      const selected = units.find(unit => unit.power >= requiredPower);
+
+      if (selected) {
+        document.getElementById('result').innerHTML =
+          `Рекомендуемый блок: <strong>${selected.model}</strong><br>` +
+          `Мощность: ${selected.power} кВт<br>` +
+          `Воздушный поток: ${selected.flow} м³/ч`;
+      } else {
+        document.getElementById('result').innerHTML = '❌ Нет подходящего блока. Требуется индивидуальный расчёт.';
+      }
+    }
+  </script>
+
+</body>
+</html>

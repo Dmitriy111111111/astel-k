@@ -1,0 +1,146 @@
+
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Калькулятор сопротивления проводника</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    label, input, select {
+      display: block;
+      margin-bottom: 10px;
+    }
+    input[type="number"] {
+      width: 200px;
+    }
+  </style>
+</head>
+
+
+<body>
+  <h1>Калькулятор сопротивления проводника</h1>
+
+  <label for="material">Материал:</label>
+  <select id="material">
+    <option value="0.017">Медь (0.017 Ом·мм²/м)</option>
+    <option value="0.028">Алюминий (0.028 Ом·мм²/м)</option>
+    <option value="0.13">Нихром (0.13 Ом·мм²/м)</option>
+  </select>
+
+  <label for="length">Длина проводника (м):</label>
+  <input type="number" id="length" step="any">
+
+  <label for="area">Площадь сечения (мм²):</label>
+  <input type="number" id="area" step="any">
+
+  <button onclick="calculateResistance()">Рассчитать</button>
+
+  <h2>Результат: <span id="result">—</span> Ом</h2>
+
+  <script>
+    function calculateResistance() {
+      const rho = parseFloat(document.getElementById("material").value);
+      const length = parseFloat(document.getElementById("length").value);
+      const area = parseFloat(document.getElementById("area").value);
+
+      if (isNaN(length) || isNaN(area) || area <= 0) {
+        document.getElementById("result").innerText = "Введите корректные значения";
+        return;
+      }
+
+      const resistance = rho * length / area;
+      document.getElementById("result").innerText = resistance.toFixed(4);
+    }
+  </script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Калькулятор сопротивления заземления</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    label, input {
+      display: block;
+      margin-bottom: 10px;
+    }
+    input[type="number"], input[type="range"] {
+      width: 250px;
+    }
+  </style>
+</head>
+
+
+
+</html>
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Калькулятор падения напряжения</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 500px;
+    }
+    label, input, select {
+      display: block;
+      margin-bottom: 10px;
+    }
+    input[type="number"] {
+      width: 200px;
+    }
+  </style>
+</head>
+<body>
+  <table>
+  <h1>Расчёт падения напряжения (ΔU)</h1>
+
+  <label for="material">Материал провода:</label>
+  <select id="material">
+    <option value="0.017">Медь (0.017 Ом·мм²/м)</option>
+    <option value="0.028">Алюминий (0.028 Ом·мм²/м)</option>
+  </select>
+
+  <label for="length">Длина линии (м):</label>
+  <input type="number" id="length" step="0.1" value="10">
+
+  <label for="current">Ток (А):</label>
+  <input type="number" id="current" step="0.1" value="16">
+
+  <label for="area">Сечение провода (мм²):</label>
+  <input type="number" id="area" step="0.1" value="2.5">
+
+  <button onclick="calculateVoltageDrop()">Рассчитать</button>
+
+  <h2>Падение напряжения: <span id="result">—</span> В</h2>
+
+  <script>
+    function calculateVoltageDrop() {
+      const rho = parseFloat(document.getElementById("material").value);
+      const L = parseFloat(document.getElementById("length").value) * 2; // туда и обратно
+      const I = parseFloat(document.getElementById("current").value);
+      const A = parseFloat(document.getElementById("area").value);
+
+      if (rho <= 0 || L <= 0 || I <= 0 || A <= 0) {
+        document.getElementById("result").innerText = "Ошибка ввода";
+        return;
+      }
+
+      const deltaU = (rho * L * I) / A;
+      document.getElementById("result").innerText = deltaU.toFixed(2);
+    }
+    </table>
+  </script>
+</body>
+</html>

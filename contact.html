@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Главная</title>
+  <link rel="stylesheet" href="style.css">
+  
+</head>
+<body>
+  
+  <img src="logo-1.png" alt="HTML5" width="75">
+ </body>
+<body>
+  <header>
+    <h1> Бухтелка</h1>
+    <nav>
+      <a href="index.html">Главная </a>
+      <a href="about.html"></a>
+      
+    </nav>
+  </header>
+     <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+        }
+        .center-container {
+            display: flex;
+            justify-content: center; /* по горизонтали */
+
+        }
+      </style>
+
+    <h1 style="margin-top: 20px; text-align: center;"> Здесь ты можешь высказать сове мнение и будешь услышанным... </h1>
+    <h1 style="margin-top: 20px; text-align: center;">Пиши друг!!! </h1>
+    <main>
+     <title>Центрируем GIF</title>
+
+ <div class="center-container">
+        <img src="99px_ru_animacii_42786_panda_v_dospehah_ili_pandoloreanec_v_kosmicheskom_korable.gif" alt="GIF">
+    </div>
+<script>
+  (function(w, d, s, u) {
+    w.RocketChat = function(c) { w.RocketChat._.push(c) };
+    w.RocketChat._ = [];
+    w.RocketChat.url = u;
+    var h = d.getElementsByTagName(s)[0],
+    j = d.createElement(s);
+    j.async = true;
+    j.src = u + "/livechat/rocketchat-livechat.min.js?_=t";
+    h.parentNode.insertBefore(j, h);
+  })(window, document, "script", "https://yourdomain.com/livechat");
+
+</script>
+   
+
+
+
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Mini Chat</title>
+  <style>
+    #chat { height: 400px; overflow-y: scroll; border: 1px solid #ccc; padding: 10px; }
+  </style>
+</head>
+<body>
+  <div id="chat"></div>
+  <input id="msg" placeholder="Сообщение...">
+  <button onclick="send()">Отправить</button>
+
+  <script>
+    const chat = document.getElementById('chat');
+    const ws = new WebSocket('wss://echo.websocket.org'); // только для примера, можно свой сервер
+
+    ws.onmessage = e => {
+      chat.innerHTML += `<div>${e.data}</div>`;
+      chat.scrollTop = chat.scrollHeight;
+    };
+
+    function send() {
+      const msg = document.getElementById('msg').value;
+      ws.send(msg);
+      document.getElementById('msg').value = '';
+    }
+  </script>
+</body>
+</html>
+
+    <footer>
+    <p> Ну довай ты же хочешь!!!</p>
+  </footer>
+</body>
+</html>

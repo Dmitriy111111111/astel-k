@@ -1,0 +1,2111 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+   
+  <meta charset="UTF-8">
+  
+  <title>Главная</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <img src="logo-1.png" alt="HTML5" width="75">
+ </body>
+<body>
+  <header>
+    <h1> BIM для АР и KM</h1>
+    <nav>
+      <a href="index.html">Главная </a>
+      <a href="about.html"></a>
+      
+    </nav>
+  </header>
+    <h1> BIM для Архитекторов и Конструкторов</h1>
+    <h2>ч -  числовое значение </h2>
+    <h2>т - текстовое значение </h2>
+     <head>
+  <meta charset="utf-8">
+  <title>Ширина</title>
+ </head>
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Данные из JSON</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1 { color: #2c3e50; }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 20px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        tr:hover { background-color: #f1f1f1; }
+    </style>
+</head>
+<body>
+    <h1>Таблица рекомендованной наполняемости атребутов, для АР и KM</h1>
+    <table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+  
+      <th>DN</th>
+      <th>DN отвода</th>
+      <th>t перекачиваемой жидкости
+(макс)</th>
+      <th>Автоматическое управление</th>
+      <th>Вид/наименование</th>
+      <th>Высота</th>
+      <th>Высота строительная</th>
+      <th>Давление</th>
+      <th>Давление.1</th>
+      <th>Давление max</th>
+      <th>Давление min</th>
+      <th>Диаметр</th>
+      <th>Диаметр вентиляционной трубы</th>
+      <th>Диаметр входного патрубка</th>
+      <th>Диаметр выпуска</th>
+      <th>Диаметр выходного патрубка</th>
+      <th>Диаметр отвода</th>
+      <th>Диаметр отвода 2</th>
+      <th>Диаметр отводящей трубы</th>
+      <th>Диаметр подвода</th>
+      <th>Диаметр подводящей трубы</th>
+      <th>Длина</th>
+      <th>Длина строительная</th>
+      <th>Доступ для обслуживания</th>
+      <th>Ед. изм.</th>
+      <th>Unnamed: 26</th>
+      <th>Unnamed: 27</th>
+      <th>Unnamed: 28</th>
+      <th>Изготовитель</th>
+      <th>Источник питания</th>
+      <th>Класс воздуховодов</th>
+      <th>Класс герметичности</th>
+      <th>Класс защиты двигателя</th>
+      <th>Класс энергоэффективности</th>
+      <th>Код изделия</th>
+      <th>Кол-во насосов</th>
+      <th>Лестница</th>
+      <th>Масса ед. изм.</th>
+      <th>Материал</th>
+      <th>Материал корпуса</th>
+      
+      <th>Материал оплетки</th>
+      <th>Монтажная длина</th>
+      <th>Мощность</th>
+      <th>Unnamed: 45</th>
+      <th>Мощность двигателя</th>
+      <th>Напор макс.</th>
+      <th>Напряжение</th>
+      <th>Напряжение/частота</th>
+      <th>Обозначение по ГОСТ</th>
+      <th>Объем</th>
+      <th>Перекачиваемая жидкость</th>
+      <th>Подача макс.</th>
+      <th>Поставщик</th>
+      <th>Потери давления в системе</th>
+      <th>Предельная температура
+теплоносителя</th>
+      <th>Примечание</th>
+      <th>Пропускная способность</th>
+      <th>Unnamed: 59</th>
+      <th>Пропускная
+способность/производительность</th>
+      <th>Рабочая t max</th>
+      <th>Рабочая t min</th>
+      <th>Рабочее давление</th>
+      <th>Радиус</th>
+      <th>Расход</th>
+      <th>Расход max</th>
+      <th>Расход min</th>
+      <th>Расходная характеристика</th>
+      <th>Регулирующее отношение</th>
+      <th>Сила тока</th>
+      <th>Система</th>
+      <th>Скорость</th>
+      <th>Соединение</th>
+      <th>Способ подачи воды</th>
+      <th>Способ соединения</th>
+      <th>Способ установки</th>
+      <th>Способ/тип соединения</th>
+      <th>Степень огнестойкости</th>
+      <th>Схема пуска</th>
+      <th>Тип</th>
+      <th>Тип управления</th>
+      <th>Тип/марка (ГОСТ)</th>
+      <th>Толщина</th>
+      <th>Толщина стенки</th>
+      <th>Угол</th>
+      <th>Частота вращения двигателя</th>
+      <th>Ширина</th>
+      <th>Электропривод</th>
+      <th>Энергозависимость</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Названия строк</td>
+      <td>мм</td>
+      <td>мм</td>
+      <td>градус</td>
+      <td>-</td>
+      <td>-</td>
+      <td>мм</td>
+      <td>мм</td>
+      <td>атм</td>
+      <td>бар</td>
+      <td>МПа</td>
+      <td>МПа</td>
+      <td>мм</td>
+      <td>мм</td>
+      <td>мм</td>
+      <td>мм</td>
+      <td>мм</td>
+      <td>мм</td>
+      <td>мм</td>
+      <td>мм</td>
+      <td>мм</td>
+      <td>мм</td>
+      <td>мм</td>
+      <td>мм</td>
+      <td>-</td>
+      <td>м</td>
+      <td>м3</td>
+      <td>мм, м,\nшт,\nградус…</td>
+      <td>шт</td>
+      <td>-</td>
+      <td>Сеть,\nбатарея</td>
+      <td>-</td>
+      <td>-</td>
+      <td>-</td>
+      <td>-</td>
+      <td>-</td>
+      <td>шт</td>
+      <td>-</td>
+      <td>кг</td>
+      <td>-</td>
+      <td>-</td>
+      <td>(пусто)</td>
+      <td>-</td>
+      <td>мм</td>
+      <td>Вт</td>
+      <td>кВт</td>
+      <td>кВт</td>
+      <td>м</td>
+      <td>-</td>
+      <td>В/ГЦ</td>
+      <td>-</td>
+      <td>м3</td>
+      <td>-</td>
+      <td>м3/ч</td>
+      <td>-</td>
+      <td>м3/ч</td>
+      <td>градус</td>
+      <td>-</td>
+      <td>м/с</td>
+      <td>м3/ч</td>
+      <td>л/с</td>
+      <td>градус</td>
+      <td>градус</td>
+      <td>МПа</td>
+      <td>мм</td>
+      <td>м3/ч</td>
+      <td>м3/ч</td>
+      <td>м3/ч</td>
+      <td>-</td>
+      <td>-</td>
+      <td>(пусто)</td>
+      <td>-</td>
+      <td>м/с</td>
+      <td>-</td>
+      <td>-</td>
+      <td>-</td>
+      <td>-</td>
+      <td>-</td>
+      <td>-</td>
+      <td>-</td>
+      <td>-</td>
+      <td>-</td>
+      <td>-</td>
+      <td>мм</td>
+      <td>мм</td>
+      <td>градус</td>
+      <td>Об/мин</td>
+      <td>мм</td>
+      <td>-</td>
+      <td>-</td>
+    </tr>
+    <tr>
+      <td>IfcCovering</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td style="background-color: rgb(233, 46, 55); vertical-align: middle; text-align: center; height: 50px;">т</td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td style="background-color: rgb(233, 46, 55); vertical-align: middle; text-align: center; height: 50px;">т</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td style="background-color: rgb(233, 46, 55); vertical-align: middle; text-align: center; height: 50px;">т</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td style="background-color: rgb(233, 46, 55); vertical-align: middle; text-align: center; height: 50px;">т</td>
+      <td></td>
+      <td></td>
+      <td style="background-color: rgb(233, 46, 55); vertical-align: middle; text-align: center; height: 50px;">т</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td style="background-color: rgb(233, 46, 55); vertical-align: middle; text-align: center; height: 50px;">т</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td style="background-color: rgb(233, 46, 55); vertical-align: middle; text-align: center; height: 50px;">т</td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>IfcDuctFitting</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align    <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td style="background-color: rgb(233, 46, 55); vertical-align: middle; text-align: center; height: 50px;">т</td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>IfcDuctSegment</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td style="background-color: rgb(233, 46, 55); vertical-align: middle; text-align: center; height: 50px;">т</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td style="background-color: rgb(233, 46, 55); vertical-align: middle; text-align: center; height: 50px;">т</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>IfcEnergyConversionDevice</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>IfcBoiler</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>IfcBurner</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>IfcCondenser</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>IfcHeatExchanger</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td style="background-color:rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>IfcHeater</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>IfcElectricHeater</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>IfcFlowMeter\nIfcFilter\nIfcValve\nIfcFlowTerminal</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td style="background-color: rgb(233, 46, 55); vertical-align: middle; text-align: center; height: 50px;">т</td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>IfcFlowTerminal</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>IfcInterceptor</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>IfcPipe</td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td style="background-color: rgb(233, 46, 55); vertical-align: middle; text-align: center; height: 50px;">т</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td style="background-color: rgb(233, 46, 55); vertical-align: middle; text-align: center; height: 50px;">т</td>
+      <td></td>
+      <td style="background-color: rgb(233, 46, 55); vertical-align: middle; text-align: center; height: 50px;">т</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>IfcPump</td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td style="background-color: rgb(233, 46, 55); vertical-align: middle; text-align: center; height: 50px;">т</td>
+      <td style="background-color: rgb(233, 46, 55); vertical-align: middle; text-align: center; height: 50px;">т</td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td style="background-color: rgb(233, 46, 55); vertical-align: middle; text-align: center; height: 50px;">т</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td style="background-color: rgb(233, 46, 55); vertical-align: middle; text-align: center; height: 50px;">т</td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td style="background-color: rgb(233, 46, 55); vertical-align: middle; text-align: center; height: 50px;">т</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td style="background-color: rgb(233, 46, 55); vertical-align: middle; text-align: center; height: 50px;">т</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>IfcTank</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td style="background-color: rgb(233, 46, 55); vertical-align: middle; text-align: center; height: 50px;">т</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>IfcTransportElement</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td style="background-color: rgb(233, 46, 55); vertical-align: middle; text-align: center; height: 50px;">т</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td style="background-color: rgb(233, 46, 55); vertical-align: middle; text-align: center; height: 50px;">т</td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td style="background-color: rgb(233, 46, 55); vertical-align: middle; text-align: center; height: 50px;">т</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td style="background-color: rgb(233, 46, 55); vertical-align: middle; text-align: center; height: 50px;">т</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td style="background-color: rgb(233, 46, 55); vertical-align: middle; text-align: center; height: 50px;">т</td>
+      <td></td>
+      <td></td>
+      <td style="background-color: rgb(233, 46, 55); vertical-align: middle; text-align: center; height: 50px;">т</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td style="background-color: rgb(233, 46, 55); vertical-align: middle; text-align: center; height: 50px;">т</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td style="background-color: rgb(233, 46, 55); vertical-align: middle; text-align: center; height: 50px;">т</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>IfcValve</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>IfcWasteTerminal</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>(пусто)</td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td style="background-color: rgb(233, 46, 55); vertical-align: middle; text-align: center; height: 50px;">т</td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td style="background-color: rgb(233, 46, 55); vertical-align: middle; text-align: center; height: 50px;">т</td>
+      <td></td>
+      <td style="background-color: rgb(233, 46, 55); vertical-align: middle; text-align: center; height: 50px;">т</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td style="background-color: rgb(233, 46, 55); vertical-align: middle; text-align: center; height: 50px;">т</td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td style="background-color: rgb(233, 46, 55); vertical-align: middle; text-align: center; height: 50px;">т</td>
+      <td style="background-color: rgb(233, 46, 55); vertical-align: middle; text-align: center; height: 50px;">т</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td style="background-color: rgb(233, 46, 55); vertical-align: middle; text-align: center; height: 50px;">т</td>
+      <td></td>
+      <td style="background-color: rgb(233, 46, 55); vertical-align: middle; text-align: center; height: 50px;">т</td>
+      <td style="background-color: rgb(233, 46, 55); vertical-align: middle; text-align: center; height: 50px;">т</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td style="background-color: rgb(233, 46, 55); vertical-align: middle; text-align: center; height: 50px;">т</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+     <td style="background-color: rgb(63, 185, 26); vertical-align: middle; text-align: center; height: 50px;">ч</td>
+      <td style="background-color: rgb(233, 46, 55); vertical-align: middle; text-align: center; height: 50px;">т</td>
+      <td style="background-color: rgb(233, 46, 55); vertical-align: middle; text-align: center; height: 50px;">т</td>
+    </tr>
+  </tbody>
+</table>
+</body>
+</html>
+
+
+
+
+
+
+ <footer>
+    
+    <p>&copy; BIM ear white </p>
+
+       <script>
+      fetch("data.j")
+    </script>
+
+    <p>&copy; BIM ear white </p>
+  </footer>
+</body>
+</html>
+

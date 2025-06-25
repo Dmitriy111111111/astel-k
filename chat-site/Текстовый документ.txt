@@ -1,0 +1,6 @@
+/chat-app
+├── public
+│   ├── index.html
+│   └── chat.js
+├── server.js
+└── package.json
