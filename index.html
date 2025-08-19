@@ -21,7 +21,6 @@
   font-size: 16px;
 }
   </style>
-  
 </head>
   <header>
     <h1>Bim инженеринг Астел-К</h1>
@@ -249,6 +248,201 @@
  
   </tbody>
 </table>
+</body>
+</html>
+
+
+
+<head>
+    <meta charset="UTF-8">
+    <title>Данные из JSON</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1 { color: #2c3e50; }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 20px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        tr:hover { background-color: #f1f1f1; }
+    </style>
+</head>
+<body>
+</details>
+  <details>
+    <summary>Требоввания к LOD</summary>
+    <table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>Модель</th>
+      <th>Обозначение</th>
+      <th>Точность</th>
+      <th>Применение</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>LOD 100</td>
+      <td>Можт быть графическое или текстовое обозначение (условное). Не  не являются геометрическими</td>
+      <td>Приблезительная</td>
+      <td>Эскизные проекты</td>
+      
+    </tr>
+    <tr>
+      <td>LOD 200</td>
+      <td>Графически представлен. Может содержать неграфическую информацию</td>
+      <td>Приблезительная</td>
+      <td>Эскизные проекты</td>
+      
+    </tr>
+    <tr>
+      <td>LOD 300</td>
+      <td>Графически представлен как конкретная система, с описанием или описанием сборки.</td>
+      <td>Закрепленна</td>
+      <td>П/РП</td>
+      <td>Информация в самой моделе может быть изменена и не прекрепленна к внешним выноскам</td>
+    </tr>
+    <tr>
+      <td>LOD 350</td>
+      <td>Графически представлен как конкретная система, с описанием или описанием сборки.</td>
+      <td>Закрепленна</td>
+      <td>П/РП</td>
+      <td>Количество, размер, форма, расположение и ориентация запроектированного элемента могут быть измерены непосредственно из модели без \nссылки на прикрепленную информацию, такую как примечания или размерные выноски.</td>
+    </tr>
+    <tr>
+      <td>LOD 400</td>
+      <td>высокая деталицация</td>
+      <td>Закрепленна</td>
+      <td>РД</td>
+      
+    </tr>
+    <tr>
+      <td>LOD 500</td>
+      <td>Является подтвержденным представлением построенного объекта с точки \nзрения размера, формы, местоположения, количества и ориентации.</td>
+      <td>подтвержденая</td>
+      
+      <td>LOD 500 относится к области проверки и не является показателем перехода на \nболее высокий уровень проработки геометрии или информации. ЭМ с элементами \nуровня LOD 500 появляется как результат сверки построенного объекта с проектной \nинформационной моделью (PIM) и уточнения информации, содержащейся в проектной \nмодели и является, по сути, исполнительной ЭМ.</td>
+    </tr>
+
+  </tbody>
+</table>
+</body>
+ </details> 
+
+
+<!DOCTYPE html> <!--видео-->
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Видео-карусель</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f4f4f4;
+    }
+
+    .carousel-wrapper {
+      position: relative;
+      max-width: 100%;
+      overflow: hidden;
+      padding: 20px;
+    }
+
+    .video-strip {
+      display: flex;
+      gap: 20px;
+      overflow-x: auto;
+      scroll-behavior: smooth;
+    }
+
+    .video-strip iframe {
+      width: 320px;
+      height: 180px;
+      flex: 0 0 auto;
+      border-radius: 10px;
+    }
+
+    .arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 40px;
+      background: rgba(0, 0, 0, 0.5);
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      cursor: pointer;
+      z-index: 10;
+      border-radius: 50%;
+    }
+
+    .arrow.left {
+      left: 10px;
+    }
+
+    .arrow.right {
+      right: 10px;
+    }
+
+    .arrow:hover {
+      background: rgba(0, 0, 0, 0.7);
+    }
+
+    /* Скрыть скроллбар */
+    .video-strip::-webkit-scrollbar {
+      display: none;
+    }
+
+    .video-strip {
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="carousel-wrapper">
+    <button class="arrow left" onclick="scrollCarousel(-1)">&#10094;</button>
+
+    <div class="video-strip" id="videoCarousel">
+    <iframe src="https://www.youtube.com/embed/Lebz0K-DX6w?start=613" allowfullscreen></iframe>
+    <iframe src="https://www.youtube.com/embed/3qpahJX_6pQ" allowfullscreen></iframe>
+    <iframe src="https://www.youtube.com/embed/Uo8SwVJKcHE" allowfullscreen></iframe>
+    <iframe src="https://www.youtube.com/embed/Pfm-SOILHAE" allowfullscreen></iframe>
+    <iframe src="https://www.youtube.com/embed/9voNv5K0YyI" allowfullscreen></iframe>
+    <iframe src="https://www.youtube.com/embed/NjRxEjfa3nw" allowfullscreen></iframe>
+    </div>
+
+    <button class="arrow right" onclick="scrollCarousel(1)">&#10095;</button>
+  </div>
+
+  <script>
+    function scrollCarousel(direction) {
+      const carousel = document.getElementById('videoCarousel');
+      const scrollAmount = 340; // примерно ширина видео + отступ
+      carousel.scrollBy({
+        left: direction * scrollAmount,
+        behavior: 'smooth'
+      });
+    }
+  </script>
+
+  </main>
+
+  <footer>
+    
+    <p>&copy; BIM ear white </p>
+  </footer>
 </body>
 </html>
 
