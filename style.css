@@ -90,3 +90,16 @@ footer {
   font-size: 14px;
   margin-bottom: 10px;
 }
+
+summary {
+  cursor: pointer;              /* курсор-рука */
+  font-size: 21px;              /* размер текста */
+  font-weight: bold;            /* жирный */
+  color: #0056b3;               /* синий цвет */
+  text-decoration: underline;   /* подчеркнутый */
+  padding: 6px 0;               /* отступы сверху/снизу */
+}
+
+summary:hover {
+  color: #ff6600;               /* при наведении меняется цвет */
+}
