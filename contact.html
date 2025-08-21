@@ -1,21 +1,28 @@
 <!DOCTYPE html>
-<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <title>Главная</title>
   <link rel="stylesheet" href="style.css">
   
+
+<html lang="ru /RUTARGET="_BLANK>
+<head>
+    <meta charset="UTF-8 /RUTARGET="_BLANK>
+    <title>Главная</title>
+  <link rel="stylesheet" href="style.css /RUTARGET="_BLANK>
+  
 </head>
 <body>
   
-  <img src="logo-1.png" alt="HTML5" width="75">
+  <img src="logo-1.png" alt="HTML5" width="75 /RUTARGET="_BLANK>
  </body>
 <body>
   <header>
-    <h1> Бухтелка</h1>
+    <h1> Полезные ссылки </h1>
     <nav>
-      <a href="index.html">Главная </a>
-      <a href="about.html"></a>
+      <a href="index.html /RUTARGET="_BLANK>Главная </a>
+      <a href="about.html /RUTARGET="_BLANK></a>
+
       
     </nav>
   </header>
@@ -29,15 +36,46 @@
             justify-content: center; /* по горизонтали */
 
         }
+            body {
+      font-family: Arial, sans-serif; /* приятный шрифт */
+      background-color: #f9f9f9;      /* светлый фон */
+      padding: 20px;
+    }
+    .link-block {
+      margin-bottom: 25px;            /* отступы между блоками */
+      padding: 15px;
+      background: #ffffff;            /* белая карточка */
+      border-radius: 12px;            /* скруглённые углы */
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1); /* лёгкая тень */
+    }
+    .link-block a {
+      font-size: 18px;
+      font-weight: bold;
+      color: #0073e6;
+      text-decoration: none;          /* убираем подчёркивание */
+    }
+    .link-block a:hover {
+      color: #ff6600;                 /* эффект при наведении */
+      text-decoration: underline;
+    }
+    .description {
+      margin-top:20;
+      font-size: 14px;
+      color: #444;
+    }
       </style>
 
-    <h1 style="margin-top: 20px; text-align: center;"> Здесь ты можешь высказать сове мнение и будешь услышанным... </h1>
-    <h1 style="margin-top: 20px; text-align: center;">Пиши друг!!! </h1>
+    <h1 style="margin-top: 20px; text-align: center; /RUTARGET="_BLANK> Ссылки по которым ты можешь скачать RVT файлы для своего проекта !!!</h1>
+
+
+
+
+
     <main>
      <title>Центрируем GIF</title>
 
- <div class="center-container">
-        <img src="99px_ru_animacii_42786_panda_v_dospehah_ili_pandoloreanec_v_kosmicheskom_korable.gif" alt="GIF">
+ <div class="center-container /RUTARGET="_BLANK>
+        <img src="99px_ru_animacii_42786_panda_v_dospehah_ili_pandoloreanec_v_kosmicheskom_korable.gif" alt="GIF /RUTARGET="_BLANK>
     </div>
 <script>
   (function(w, d, s, u) {
@@ -50,7 +88,6 @@
     j.src = u + "/livechat/rocketchat-livechat.min.js?_=t";
     h.parentNode.insertBefore(j, h);
   })(window, document, "script", "https://yourdomain.com/livechat");
-
 </script>
    
 
@@ -60,37 +97,96 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8 /RUTARGET="_BLANK>
   <title>Mini Chat</title>
   <style>
     #chat { height: 400px; overflow-y: scroll; border: 1px solid #ccc; padding: 10px; }
   </style>
 </head>
-<body>
-  <div id="chat"></div>
-  <input id="msg" placeholder="Сообщение...">
-  <button onclick="send()">Отправить</button>
 
-  <script>
-    const chat = document.getElementById('chat');
-    const ws = new WebSocket('wss://echo.websocket.org'); // только для примера, можно свой сервер
+<br><br>
+<br><br>
+  <div class="link-block /RUTARGET="_BLANK>
+       <div class="description /RUTARGET="_BLANK>
+1. <a href="https://www.bimobject.com/rutarget="_blank>BIMobject (Free models)</a>
+    Один из крупнейших мировых порталов с бесплатными и платными BIM-моделями от производителей; широкий ассортимент, поддержка разных форматов (Revit, ArchiCAD и др.).
+   </div>
+  </div>
+<br><br>
 
-    ws.onmessage = e => {
-      chat.innerHTML += `<div>${e.data}</div>`;
-      chat.scrollTop = chat.scrollHeight;
-    };
+<div class="link-block /RUTARGET="_BLANK>
+2. <a href="https://www.bimandco.com/rutarget="_blank>BIM&CO</a>                                                                        
+ </div>
+  </div>
+<br><br>
 
-    function send() {
-      const msg = document.getElementById('msg').value;
-      ws.send(msg);
-      document.getElementById('msg').value = '';
-    }
-  </script>
-</body>
-</html>
+ <div class="link-block /RUTARGET="_BLANK>
+3. <a href="https://www.revitcity.com/index.php /RUTARGET="_BLANK>RevitCity</a>– старое комьюнити с бесплатными семействами Revit, созданными пользователями; разнообразие, но качество моделей сильно разнится.
+ </div>
+  </div>
+<br><br>
+
+ <div class="link-block /RUTARGET="_BLANK>
+4. <a href="https://www.thenbs.com/ /RUTARGET="_BLANK>	 NBS National BIM Library</a>– официальная библиотека Великобритании; бесплатные объекты, в основном от производителей, ориентированы на соответствие стандартам NBS.
+ </div>
+  </div>
+<br><br>
+ <div class="link-block /RUTARGET="_BLANK>
+5.<a href=https://www.arcat.com/content-type/bim>	ARCAT </a>– американский портал спецификаций и BIM-моделей; бесплатные семейства Revit от производителей, акцент на строительные материалы и оборудование.
+ </div>
+  </div>
+<br><br>
+ <div class="link-block /RUTARGET="_BLANK>
+6. 
+<a href="https://www.cadenas.de/en< /RUTARGET="_BLANK> Cadenas BIMcatalogs.net	</a>– огромный каталог производителей с 3D-моделями и BIM-файлами; поддержка множества форматов (Revit, AutoCAD, IFC).
+ </div>
+  </div>
+<br><br>
+ <div class="link-block /RUTARGET="_BLANK>
+7. 
+<a href="https://www.syncronia.com/en/ /RUTARGET="_BLANK>	Syncronia </a>– итальянский ресурс с бесплатными BIM-моделями мебели, освещения и отделочных материалов, часто высокого качества.
+ </div>
+  </div>
+<br><br>
+ <div class="link-block /RUTARGET="_BLANK>
+8. 
+<a href="https://www.turbosquid.com/Search/3D-Models/free/revit?dd_referrer=https%3A%2F%2Fwww.google.com%2F /RUTARGET="_BLANK>	TurboSquid (FREE filter)</a>– крупный 3D-маркетплейс; можно найти бесплатные модели, но не всегда оптимизированные под BIM/Revit.
+ </div>
+  </div>
+<br><br>
+ <div class="link-block /RUTARGET="_BLANK>
+9. <a href="https://www.modlar.com/search/format/revit/ /RUTARGET="_BLANK>Modlar (Free Models)</a>– портал для архитекторов и дизайнеров; бесплатные BIM-объекты и спецификации от производителей.
+ </div>
+  </div>
+<br><br>
+ <div class="link-block /RUTARGET="_BLANK>
+10.<a href= /RUTARGET="_BLANK>https://market.bimsmith.com/revit-families /RUTARGET="_BLANK>BIMsmith Market (Free Families)</a>– современная платформа с бесплатными Revit-семействами; есть удобный онлайн-конструктор "BIMsmith Forge".
+ </div>
+  </div>
+<br><br>
+ <div class="link-block /RUTARGET="_BLANK>
+11. <a href="https://3d-bim.ru/category/families-revit/ /RUTARGET="_BLANK>3d-bim.ru</a>– российский сайт с бесплатными и коммерческими библиотеками для Revit; ориентирован на локальные стандарты.
+ </div>
+  </div>
+<br><br>
+
+ <div class="link-block /RUTARGET="_BLANK>
+12. <a href="https://bimlib.pro/models/ /RUTARGET="_BLANK>Bimlib</a> – русскоязычный каталог BIM-семейств и 3D-моделей, есть разделение по производителям и категориям оборудования.
+ </div>
+  </div>
+<br><br>
+
+ <div class="link-block /RUTARGET="_BLANK>
+13.  <a href="https://bim2b.ru/product-category/bsf /RUTARGET="_BLANK>Bim2B</a> – российская BIM-платформа; фокус на моделях от производителей стройматериалов и оборудования, часть контента бесплатна.
+ </div>
+  </div>
+<br><br>
+<br><br>
 
     <footer>
-    <p> Ну довай ты же хочешь!!!</p>
+    <p> Возможно будет полезно!!!</p>
   </footer>
 </body>
 </html>
+
+
