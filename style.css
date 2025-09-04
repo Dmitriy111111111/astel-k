@@ -1,6 +1,6 @@
 body {
   font-family: sans-serif;
-  margin: 10;
+  margin: 0;
   padding: 10;
   background: #f4f4f4;
 }
@@ -22,45 +22,10 @@ main {
 }
 
 footer {
-  background: #5cd877;
+  background:  #27e002;
   color: white;
   padding: 10px;
   text-align: center;
-}
-.chat-box {
-  width: 100%;
-  max-width: 600px;
-  margin: 0 auto 50px;
-  padding: 10px;
-  border: 1px solid #ccc;
-  background-color: #fafafa;
-  box-shadow: 0 0 10px rgba(2,0,0,0.1);
-}
-
-#chat {
-  height: 200px;
-  overflow-y: auto;
-  border: 1px solid #ddd;
-  padding: 10px;
-  margin-bottom: 10px;
-  background: #fff;
-}
-
-#message {
-  width: 75%;
-  padding: 8px;
-  box-sizing: border-box;
-}
-
-#send {
-  width: 20%;
-  padding: 8px;
-  box-sizing: border-box;
-  margin-left: 5%;
-}
-
-.msg {
-  margin-bottom: 5px;
 }
 /* центруем кортинки */
 .center {
