@@ -2098,6 +2098,35 @@
   </tbody>
 </table>
 
+<video autoplay muted loop id="bg-video">
+  <source src="AR.mp4" type="video/mp4">
+</video>
+
+<script>
+  const v = document.getElementById('bg-video');
+  // сразу после вставки на страницу
+  v.playbackRate = 0.8;          // замедление до 0.5x
+  // на случай автозапуска — продублируем при готовности
+  v.addEventListener('canplay', () => v.playbackRate = 0.5, { once: true });
+</script>
+
+<style>
+#bg-video {
+  position: fixed;
+  top: 0;
+  left: 0;
+  min-width: 100%;
+  min-height: 100%;
+  object-fit: cover;
+  z-index: -1; /* фон позади контента */
+}
+body {
+  margin: 0;
+  padding: 0;
+}
+</style>
+
+
  <footer>
        <script>
       fetch("data.j")
