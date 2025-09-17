@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Калькуляторы для генпланиста</title>
+  <style>
+    :root{
+      --bg:#0b0f14; --card:#111820; --ink:#e9f0fb; --muted:#9fb0c5; --acc:#71d380; --ring:rgba(113,211,128,.35); --danger:#ff6b6b;
+    }
+    *{box-sizing:border-box}
+    body{margin:0; background:var(--bg); color:var(--ink); font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial}
+    .wrap{max-width:1200px; margin:0 auto; padding:24px}
+    h1{font-size:clamp(20px,3vw,32px); margin:0 0 12px}
+    p.lead{color:var(--muted); margin:0 0 20px}
+
+    .toolbar{position:sticky; top:0; z-index:30; background:linear-gradient(180deg,rgba(11,15,20,.95),rgba(11,15,20,.85)); border-bottom:1px solid #1b2533; backdrop-filter:blur(6px)}
+    .toolbar .wrap{display:flex; gap:8px; flex-wrap:wrap}
+    .btn{display:inline-flex; gap:8px; align-items:center; padding:9px 12px; border-radius:12px; border:1px solid #1f2a3b; background:#0f1722; color:var(--ink); text-decoration:none; cursor:pointer}
+    .btn:hover{border-color:#2a3a55}
+    .btn.primary{background:linear-gradient(180deg,#9ee6a7,#3ecb59); color:#07330f; border-color:#39b24f}
+
+    .grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:16px}
+    .card{background:var(--card); border:1px solid #1b2533; border-radius:16px; padding:16px; box-shadow:0 6px 18px rgba(0,0,0,.25)}
+    .card h2{margin:0 0 6px; font-size:18px}
+    .badge{font-size:12px; padding:4px 8px; border:1px solid #27364e; border-radius:999px; color:#c9daee; display:inline-block; margin:4px 6px 10px 0}
+    .field{display:flex; gap:10px; align-items:center; margin:10px 0}
+    .field label{min-width:180px; color:var(--muted)}
+    .field input, .field select{flex:1; background:#0e141c; color:var(--ink); border:1px solid #243043; border-radius:10px; padding:10px 12px; outline:none}
+    .field input:focus, .field select:focus{border-color:var(--acc); box-shadow:0 0 0 4px var(--ring)}
+    .out{background:#0c1119; border:1px dashed #243043; padding:12px; border-radius:12px; color:#dbe8f7; font-family:ui-monospace,consolas,menlo,monaco,monospace}
+    .note{font-size:12px; color:#8fa0b6}
+    .err{color:var(--danger); font-weight:600}
+    .section{scroll-margin-top:76px}
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <div class="wrap">
+      <a class="btn" href="#zoning">Показатели застройки</a>
+      <a class="btn" href="#footprint">Подбор пятна здания</a>
+      <a class="btn" href="#parking">Парковка</a>
+      <a class="btn" href="#slope">Уклоны и пандусы</a>
+      <a class="btn" href="#earth">Земляные работы</a>
+      <a class="btn" href="#runoff">Ливнёвый расход</a>
+      <a class="btn" href="#pipe">Ливнёвка: диаметр по Маннингу</a>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <h1>Калькуляторы для генпланиста</h1>
+    <p class="lead">Набор быстрых расчётов: градостроительные показатели, пятно застройки, парковка, уклоны, земляные работы, водоотвод (Q по рациональному методу и диаметр по Маннингу). Все величины — SI/метрические.</p>
+
+    <!-- ZONING METRICS -->
+    <div id="zoning" class="card section">
+      <h2>Показатели застройки (участок)</h2>
+      <span class="badge">Площадь участка S, ha → m²: S·10 000</span>
+      <span class="badge">Плотность застройки ПЗ = ΣF_пятен / S_уч, %</span>
+      <span class="badge">КИН (FAR) = ΣGFA / S_уч</span>
+      <span class="badge">Озеленение = F_озел / S_уч, %</span>
+      <div class="field"><label>Площадь участка S, ha</label><input id="zn_Sha" type="number" step="0.0001" value="1.2"></div>
+      <div class="field"><label>Σ пятен застройки, m²</label><input id="zn_Ffoot" type="number" step="0.01" value="4800"></div>
+      <div class="field"><label>Σ общая площадь (GFA), m²</label><input id="zn_GFA" type="number" step="0.1" value="36000"></div>
+      <div class="field"><label>Озеленение F_озел, m²</label><input id="zn_green" type="number" step="0.1" value="3000"></div>
+      <div class="field"><label>Население/раб. места</label><input id="zn_people" type="number" step="1" value="2500"></div>
+      <div class="field"><label>Удельный норматив, м²/чел (или м²/раб)</label><input id="zn_areaPer" type="number" step="0.1" value="30"></div>
+      <div><button class="btn primary" onclick="calcZoning()">Рассчитать</button></div>
+      <div id="outZoning" class="out">—</div>
+      <div class="note">Плотность населения (чел/га) даётся справочно; сравнивайте с местными НГД/ПЗЗ.</div>
+    </div>
+
+    <!-- BUILDING FOOTPRINT PICKER -->
+    <div id="footprint" class="card section">
+      <h2>Подбор пятна здания по GFA и этажности</h2>
+      <span class="badge">F_пятна = GFA / этажность</span>
+      <span class="badge">ПЗ = F_пятна / S_уч, %</span>
+      <div class="field"><label>GFA (общая площадь), m²</label><input id="fp_gfa" type="number" step="1" value="20000"></div>
+      <div class="field"><label>Этажность, этажей</label><input id="fp_floors" type="number" step="1" value="8"></div>
+      <div class="field"><label>Площадь участка S, ha</label><input id="fp_Sha" type="number" step="0.0001" value="0.8"></div>
+      <div class="field"><label>Максимально допустимая ПЗ, % (норматив)</label><input id="fp_PZmax" type="number" step="0.1" value="40"></div>
+      <div><button class="btn primary" onclick="calcFootprint()">Рассчитать</button></div>
+      <div id="outFP" class="out">—</div>
+    </div>
+
+    <!-- PARKING -->
+    <div id="parking" class="card section">
+      <h2>Парковка: потребность и площадь</h2>
+      <span class="badge">Паркоместа = Σ(N_i · норма_i)</span>
+      <span class="badge">Площадь парковки ≈ места · A_на_место</span>
+      <div class="field"><label>Жильё: квартир</label><input id="pk_flats" type="number" step="1" value="200"></div>
+      <div class="field"><label>Норма жильё, м/м на 1 кв.</label><input id="pk_rate_res" type="number" step="0.01" value="0.7"></div>
+      <div class="field"><label>Офисы: GFA, m²</label><input id="pk_office" type="number" step="1" value="10000"></div>
+      <div class="field"><label>Норма офис, м/м на 100 m²</label><input id="pk_rate_off" type="number" step="0.01" value="2"></div>
+      <div class="field"><label>ТЦ: GFA, m²</label><input id="pk_retail" type="number" step="1" value="5000"></div>
+      <div class="field"><label>Норма ТЦ, м/м на 100 m²</label><input id="pk_rate_ret" type="number" step="0.01" value="3"></div>
+      <div class="field"><label>Площадь на место, m² (с проездами)</label><input id="pk_area_per" type="number" step="1" value="28"></div>
+      <div><button class="btn primary" onclick="calcParking()">Рассчитать</button></div>
+      <div id="outParking" class="out">—</div>
+      <div class="note">Уточняйте нормы по ПЗЗ/СП/СНиП вашего города; коэффициенты смешанного использования можно вводить вручную (например, уменьшать офис вечером).</div>
+    </div>
+
+    <!-- SLOPES / RAMPS -->
+    <div id="slope" class="card section">
+      <h2>Уклоны дорог и пандусов</h2>
+      <span class="badge">i = Δh / L</span>
+      <span class="badge">L = Δh / i</span>
+      <div class="field"><label>Перепад высот Δh, m</label><input id="sl_dh" type="number" step="0.01" value="1.2"></div>
+      <div class="field"><label>Длина L, m</label><input id="sl_L" type="number" step="0.01" value="12"></div>
+      <div class="field"><label>Макс. уклон доп., % (норма)</label><input id="sl_i_max" type="number" step="0.1" value="8"></div>
+      <div><button class="btn primary" onclick="calcSlope()">Рассчитать</button></div>
+      <div id="outSlope" class="out">—</div>
+      <div class="note">Для пешеходных/инвалидных пандусов часто применяется 5–8% с горизонтальными площадками через каждые 6–9 м — сверяйтесь с местными нормами.</div>
+    </div>
+
+    <!-- EARTHWORKS -->
+    <div id="earth" class="card section">
+      <h2>Земляные работы (приближённо)</h2>
+      <span class="badge">V ≈ S · t̄</span>
+      <div class="field"><label>Площадь выемки, m²</label><input id="ew_Scut" type="number" step="0.1" value="2500"></div>
+      <div class="field"><label>Средняя толщина выемки, m</label><input id="ew_tcut" type="number" step="0.01" value="0.6"></div>
+      <div class="field"><label>Площадь насыпи, m²</label><input id="ew_Sfill" type="number" step="0.1" value="1800"></div>
+      <div class="field"><label>Средняя толщина насыпи, m</label><input id="ew_tfill" type="number" step="0.01" value="0.4"></div>
+      <div><button class="btn primary" onclick="calcEarth()">Рассчитать</button></div>
+      <div id="outEarth" class="out">—</div>
+      <div class="note">Коэффициенты разрыхления/уплотнения учитывайте отдельно (например, k≈1.2 для выемки, k≈0.95 для уплотнения).</div>
+    </div>
+
+    <!-- RUNOFF (RATIONAL) -->
+    <div id="runoff" class="card section">
+      <h2>Ливнёвый расход по рациональному методу</h2>
+      <span class="badge">Q = C · i · A</span>
+      <span class="badge">ед.: C (безр.), i (л/(с·га)), A (га) → Q (л/с)</span>
+      <div class="field"><label>Площадь водосбора A, ha</label><input id="ro_Aha" type="number" step="0.0001" value="3.5"></div>
+      <div class="field"><label>Коэффициент стока C</label><input id="ro_C" type="number" step="0.01" value="0.7"></div>
+      <div class="field"><label>Интенсивность дождя i, л/(с·га)</label><input id="ro_i" type="number" step="0.1" value="180"></div>
+      <div><button class="btn primary" onclick="calcRunoff()">Рассчитать</button></div>
+      <div id="outRunoff" class="out">—</div>
+      <div class="note">Возьмите i по карте изохрон/СП для нужной обеспеченности и времени концентрации. Для смешанных покрытий вычислите средневзвешенное C.</div>
+    </div>
+
+    <!-- STORM PIPE (MANNING) -->
+    <div id="pipe" class="card section">
+      <h2>Ливнёвка: диаметр трубы по Маннингу (полное течение)</h2>
+      <span class="badge">Q = (π·D²/4) · v</span>
+      <span class="badge">v = (1/n) · R^{2/3} · S^{1/2}</span>
+      <span class="badge">R = D/4 (круглая труба, полное течение)</span>
+      <div class="field"><label>Требуемый расход Q, л/с</label><input id="mn_Qls" type="number" step="0.1" value="150"></div>
+      <div class="field"><label>Продольный уклон S, ‰</label><input id="mn_Spermil" type="number" step="0.01" value="5"></div>
+      <div class="field"><label>Коэф. шероховатости n</label><input id="mn_n" type="number" step="0.001" value="0.013"></div>
+      <div><button class="btn primary" onclick="calcManning()">Подобрать диаметр</button></div>
+      <div id="outManning" class="out">—</div>
+      <div class="note">Проверяйте заполнение и скорости (обычно 0.7–3.0 m/s). При частичном наполнении используйте таблицы коэффициентов заполнения.</div>
+    </div>
+
+    <div class="card">
+      <h2>Вставка на вашу страницу</h2>
+      <div class="out"><code>&lt;a class="btn" href="calculators_genplan.html" target="_blank" rel="noopener"&gt;Калькуляторы для генпланиста&lt;/a&gt;</code></div>
+    </div>
+  </div>
+
+<script>
+  const fmt = (x,d=4)=> isFinite(x)? Number(x).toLocaleString('ru-RU',{maximumFractionDigits:d}) : '—';
+  const val = id => parseFloat(document.getElementById(id).value);
+  const out = (id,html)=> document.getElementById(id).innerHTML = html;
+
+  // Zoning
+  function calcZoning(){
+    const Sha = val('zn_Sha');
+    const S = Sha*10000; // m2
+    const Ffoot = val('zn_Ffoot');
+    const GFA = val('zn_GFA');
+    const Fgreen = val('zn_green');
+    const people = val('zn_people');
+    const areaPer = val('zn_areaPer');
+    if(S<=0){ out('outZoning','<span class="err">Площадь участка должна быть >0</span>'); return; }
+    const PZ = 100*Ffoot/S;
+    const FAR = GFA/S;
+    const Green = 100*Fgreen/S;
+    const dens_pop = people/(S/10000); // чел/га
+    const demand_area = people*areaPer; // m2 требуемой площади по уд. нормативу
+    out('outZoning', `ПЗ = <b>${fmt(PZ,2)} %</b><br>KИН (FAR) = <b>${fmt(FAR,3)}</b><br>Озеленение = <b>${fmt(Green,2)} %</b><br>Плотность населения/раб. мест = <b>${fmt(dens_pop,1)} на га</b><br>Требуемая суммарная площадь по нормативу = <b>${fmt(demand_area,0)} m²</b>`);
+  }
+
+  // Footprint
+  function calcFootprint(){
+    const GFA = val('fp_gfa');
+    const floors = val('fp_floors');
+    const Sha = val('fp_Sha');
+    const PZmax = val('fp_PZmax');
+    if(GFA<=0||floors<=0||Sha<=0){ out('outFP','<span class="err">Проверьте ввод</span>'); return; }
+    const S = Sha*10000;
+    const Ffoot = GFA/floors;
+    const PZ = 100*Ffoot/S;
+    const ok = PZ <= PZmax;
+    out('outFP', `Пятно здания F_пятна ≈ <b>${fmt(Ffoot,0)} m²</b><br>ПЗ = <b>${fmt(PZ,2)} %</b> (лимит ${PZmax}% → <b>${ok? 'OK' : 'Превышение'}</b>)`);
+  }
+
+  // Parking
+  function calcParking(){
+    const flats = val('pk_flats');
+    const rRes = val('pk_rate_res');
+    const off = val('pk_office');
+    const rOff = val('pk_rate_off');
+    const ret = val('pk_retail');
+    const rRet = val('pk_rate_ret');
+    const aPer = val('pk_area_per');
+    const nRes = flats*rRes;
+    const nOff = off/100*rOff;
+    const nRet = ret/100*rRet;
+    const n = nRes+nOff+nRet;
+    const A = n*aPer;
+    out('outParking', `Итого мест: <b>${fmt(n,1)} м/м</b><br>Оценка площади: <b>${fmt(A,0)} m²</b><br><span class="note">В т.ч.: жильё ${fmt(nRes,1)}, офис ${fmt(nOff,1)}, ТЦ ${fmt(nRet,1)}</span>`);
+  }
+
+  // Slopes
+  function calcSlope(){
+    const dh = val('sl_dh');
+    const L = val('sl_L');
+    const i_max = val('sl_i_max')/100;
+    if(L<=0){ out('outSlope','<span class="err">L > 0</span>'); return; }
+    const i = dh/L; // decimal
+    const i_pct = i*100;
+    const L_req = dh/(i_max>0?i_max:1);
+    out('outSlope', `Фактический уклон i = <b>${fmt(i_pct,2)} %</b><br>Длина для допустимого уклона ${fmt(i_max*100,1)}%: <b>${fmt(L_req,2)} m</b> (${L_req<=L? 'OK' : 'Нужно увеличить длину/устроить пролёты'})`);
+  }
+
+  // Earthworks
+  function calcEarth(){
+    const Scut = val('ew_Scut');
+    const tcut = val('ew_tcut');
+    const Sfill = val('ew_Sfill');
+    const tfill = val('ew_tfill');
+    if(Scut<0||tcut<0||Sfill<0||tfill<0){ out('outEarth','<span class="err">Отрицательных значений быть не должно</span>'); return; }
+    const Vcut = Scut*tcut;
+    const Vfill = Sfill*tfill;
+    const balance = Vcut - Vfill;
+    out('outEarth', `Выемка V_cut ≈ <b>${fmt(Vcut,2)} m³</b><br>Насыпь V_fill ≈ <b>${fmt(Vfill,2)} m³</b><br>Баланс (выемка − насыпь) = <b>${fmt(balance,2)} m³</b>`);
+  }
+
+  // Runoff (Rational)
+  function calcRunoff(){
+    const Aha = val('ro_Aha');
+    const C = val('ro_C');
+    const i = val('ro_i'); // l/(s*ha)
+    if(Aha<0||C<0||i<0){ out('outRunoff','<span class="err">Значения должны быть ≥ 0</span>'); return; }
+    const Qls = C*i*Aha; // l/s
+    const Qm3s = Qls/1000; // m3/s
+    out('outRunoff', `Q = <b>${fmt(Qls,1)} л/с</b> (<span class="note">${fmt(Qm3s,3)} m³/s</span>)`);
+  }
+
+  // Manning diameter (full)
+  function calcManning(){
+    const Qls = val('mn_Qls');
+    const Spermil = val('mn_Spermil');
+    const n = val('mn_n');
+    if(Qls<=0||n<=0||Spermil<=0){ out('outManning','<span class="err">Проверьте ввод</span>'); return; }
+    const Q = Qls/1000; // m3/s
+    const S = Spermil/1000; // ‰ -> m/m
+    // For full circular pipe: v = (1/n)*R^{2/3}*S^{1/2}, R=D/4
+    // Q = A*v = (π D^2/4) * (1/n) * ( (D/4)^{2/3} ) * S^{1/2}
+    // Solve for D: Q = K * D^{2 + 2/3} = K * D^{8/3}
+    const K = Math.PI/4 * (1/n) * Math.pow(1/4,2/3) * Math.sqrt(S);
+    const D = Math.pow(Q / K, 3/8); // meters
+    const Dmm = D*1000;
+    // Compute velocity for check
+    const R = D/4;
+    const v = (1/n) * Math.pow(R,2/3) * Math.sqrt(S);
+    out('outManning', `Диаметр ≈ <b>${fmt(Dmm,0)} мм</b><br>Скорость v ≈ <b>${fmt(v,2)} m/s</b>`);
+  }
+</script>
+</body>
+</html>

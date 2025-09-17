@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Калькулятор КЖ — быстрые проверки</title>
+  <style>
+    :root{--bg:#0f172a;--card:#111827;--muted:#94a3b8;--acc:#22d3ee;--ok:#22c55e;--warn:#f59e0b;--bad:#ef4444}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,Segoe UI,Inter,Roboto,Arial,sans-serif;background:linear-gradient(180deg,#0b1022,#0f172a);color:#e5e7eb}
+    header{padding:24px 16px;text-align:center}
+    header h1{margin:0;font-size:28px}
+    header p{margin:8px 0 0;color:var(--muted)}
+    .container{max-width:1200px;margin:0 auto;padding:16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:16px}
+    .card{background:rgba(17,24,39,.85);backdrop-filter:saturate(140%) blur(6px);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:16px;box-shadow:0 10px 24px rgba(0,0,0,.35)}
+    .card h2{margin:0 0 10px;font-size:18px}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:8px 0}
+    .row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:8px 0}
+    label{font-size:12px;color:var(--muted)}
+    input,select{width:100%;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.08);background:#0b1220;color:#e5e7eb;outline:none}
+    input:focus,select:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(34,211,238,.15)}
+    .btn{display:inline-block;margin-top:8px;padding:8px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.12);cursor:pointer;background:#0b1220;color:#e5e7eb}
+    .btn:hover{border-color:var(--acc)}
+    .out{margin-top:10px;padding:10px;border-radius:12px;background:#0b1220;border:1px dashed rgba(255,255,255,.08);font-variant-numeric:tabular-nums;white-space:pre-line}
+    .muted{color:var(--muted);font-size:12px}
+    .tag{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.12);font-size:12px;color:#cbd5e1}
+    .ok{color:var(--ok)}.warn{color:var(--warn)}.bad{color:var(--bad)}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Калькулятор КЖ — быстрые проверки</h1>
+    <p>Балка (изгиб) · Плита (однопролёт) · Пробивная срезка · Колонна (ось) · Вес арматуры · Объём бетона</p>
+  </header>
+
+  <main class="container">
+    <!-- Материалы -->
+    <section class="card" id="mats">
+      <h2>Материалы</h2>
+      <div class="row">
+        <div>
+          <label>Бетон fck, МПа (B25≈25)</label>
+          <select id="fck">
+            <option value="20">20 (B20)</option>
+            <option value="25" selected>25 (B25)</option>
+            <option value="30">30 (B30)</option>
+            <option value="35">35 (B35)</option>
+            <option value="40">40 (B40)</option>
+          </select>
+        </div>
+        <div>
+          <label>Арматура fyk, МПа</label>
+          <select id="fyk">
+            <option value="400" selected>A400 (АIII)</option>
+            <option value="500">A500</option>
+            <option value="600">A600</option>
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>γc (бетон)</label>
+          <input type="number" id="gammac" value="1.5" step="0.05">
+        </div>
+        <div>
+          <label>γs (сталь)</label>
+          <input type="number" id="gammas" value="1.15" step="0.01">
+        </div>
+      </div>
+      <div class="out" id="mat_out"></div>
+      <button class="btn" onclick="updMats()">Обновить параметры</button>
+      <p class="muted">Используются упрощённые зависимости ЕС2: fcd=fck/γc; fyd=fyk/γs. Проверки ориентировочные.</p>
+    </section>
+
+    <!-- Балка: изгиб и требуемая As -->
+    <section class="card" id="beam">
+      <h2>Балка: требуемая As по M<sub>Ed</sub></h2>
+      <div class="row">
+        <div>
+          <label>Ширина b, мм</label>
+          <input type="number" id="b" value="300" step="1">
+        </div>
+        <div>
+          <label>Высота h, мм</label>
+          <input type="number" id="h" value="500" step="1">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Защитный слой c, мм</label>
+          <input type="number" id="cover" value="35" step="1">
+        </div>
+        <div>
+          <label>Диам. раст. стержня, мм</label>
+          <input type="number" id="phi" value="16" step="1">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Изгибающий момент M<sub>Ed</sub>, кН·м</label>
+          <input type="number" id="Med" value="120" step="0.1">
+        </div>
+        <div>
+          <label>Рычаг z≈0.9·d (авто)</label>
+          <input type="text" id="zinfo" value="авто" disabled>
+        </div>
+      </div>
+      <button class="btn" onclick="calcBeam()">Рассчитать As</button>
+      <div class="out" id="beam_out"></div>
+      <p class="muted">As,req = MEd / (z·fyd); z≈0.9·d, d=h−c−φ/2. Минимум: ρmin≈0.0013 → As,min=ρmin·b·d.</p>
+    </section>
+
+    <!-- Плита: однополосный расчёт на м.п. -->
+    <section class="card" id="slab">
+      <h2>Плита (однопролёт, м.п.)</h2>
+      <div class="row">
+        <div>
+          <label>Толщина h, мм</label>
+          <input type="number" id="sl_h" value="200" step="1">
+        </div>
+        <div>
+          <label>Покрытие c, мм</label>
+          <input type="number" id="sl_c" value="20" step="1">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Диам. раб. стержня, мм</label>
+          <input type="number" id="sl_phi" value="12" step="1">
+        </div>
+        <div>
+          <label>Момент на м.п., кН·м/м</label>
+          <input type="number" id="sl_Med" value="35" step="0.1">
+        </div>
+      </div>
+      <button class="btn" onclick="calcSlab()">Рассчитать As/м</button>
+      <div class="out" id="sl_out"></div>
+      <p class="muted">Результат: требуемая площадь арматуры на метр ширины. Подбор шага: s = (π·φ²/4)/As_req_per_m.</p>
+    </section>
+
+    <!-- Пробивная срезка -->
+    <section class="card" id="punch">
+      <h2>Пробивная срезка плиты (около колонны)</h2>
+      <div class="row">
+        <div>
+          <label>Стороны колонны c1×c2, мм</label>
+          <input type="number" id="pc_c1" value="400" step="1">
+        </div>
+        <div>
+          <label>&nbsp;</label>
+          <input type="number" id="pc_c2" value="400" step="1">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Толщина плиты h, мм</label>
+          <input type="number" id="pc_h" value="250" step="1">
+        </div>
+        <div>
+          <label>Покрытие c, мм</label>
+          <input type="number" id="pc_cov" value="25" step="1">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Диам. рабочей арматуры, мм</label>
+          <input type="number" id="pc_phi" value="14" step="1">
+        </div>
+        <div>
+          <label>Вертикальная сила V<sub>Ed</sub>, кН</label>
+          <input type="number" id="pc_Ved" value="900" step="1">
+        </div>
+      </div>
+      <button class="btn" onclick="calcPunch()">Проверить пробивную</button>
+      <div class="out" id="pc_out"></div>
+      <p class="muted">Оценка по ЕС2: vEd = VEd/(b0·d); vRd,c = (0.18/γc)·k·(100·ρl·fck)<sup>1/3</sup>, k=1+√(200/d)≤2, d в мм. b0 ~ 2·(c1+c2+4d) на контуре 2d.</p>
+    </section>
+
+    <!-- Колонна: несущая по оси -->
+    <section class="card" id="column">
+      <h2>Колонна: осевая несущая</h2>
+      <div class="row">
+        <div>
+          <label>Сечение b×h, мм</label>
+          <input type="number" id="col_b" value="400" step="1">
+        </div>
+        <div>
+          <label>&nbsp;</label>
+          <input type="number" id="col_h" value="400" step="1">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Арм. доля ρs, % (As/A<sub>c</sub>)</label>
+          <input type="number" id="col_rho" value="1.2" step="0.1">
+        </div>
+        <div>
+          <label>Расчётная осевая сила N<sub>Ed</sub>, кН</label>
+          <input type="number" id="col_Ned" value="2500" step="10">
+        </div>
+      </div>
+      <button class="btn" onclick="calcColumn()">Проверить</button>
+      <div class="out" id="col_out"></div>
+      <p class="muted">N<sub>Rd</sub>≈0.85·fcd·Ac + As·fyd (без учёта гибкости и эксцентриситета). Для детального подбора нужен расчёт по взаимодействию N–M.</p>
+    </section>
+
+    <!-- Утилиты: масса арматуры и объём бетона -->
+    <section class="card" id="utils">
+      <h2>Утилиты</h2>
+      <div class="row">
+        <div>
+          <label>Диаметр арматуры, мм</label>
+          <input type="number" id="u_phi" value="12" step="1">
+        </div>
+        <div>
+          <label>Длина, м</label>
+          <input type="number" id="u_len" value="6" step="0.01">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Размеры бетона: b×h×L, м</label>
+          <input type="number" id="u_b" value="0.3" step="0.01">
+        </div>
+        <div>
+          <label>&nbsp;</label>
+          <input type="number" id="u_h" value="0.5" step="0.01">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>&nbsp;</label>
+          <input type="number" id="u_L" value="4.0" step="0.01">
+        </div>
+        <div>
+          <label>Плотность бетона, т/м³</label>
+          <input type="number" id="u_rho" value="2.5" step="0.01">
+        </div>
+      </div>
+      <button class="btn" onclick="calcUtils()">Рассчитать</button>
+      <div class="out" id="u_out"></div>
+      <p class="muted">Масса арматуры: 0.006165·φ² (кг/м). Объём бетона = b·h·L (м³), масса = V·ρ.</p>
+    </section>
+  </main>
+
+  <section style="max-width:1200px;margin:20px auto 40px;padding:0 16px;color:var(--muted)">
+    <div class="tag">v1.0</div>
+    <p class="muted">⚠️ Упрощённые формулы для экспресс‑оценок по духу EC2/SNiP. Для рабочего проекта делайте полный расчёт по нормам РК/СП с проверкой среза, трещиностойкости, прогибов и устойчивости.</p>
+  </section>
+
+  <script>
+    // Глобальные параметры материалов
+    let fcd=25/1.5, fyd=400/1.15, fckVal=25, fykVal=400, gc=1.5, gs=1.15;
+    function updMats(){
+      const fck=parseFloat(document.getElementById('fck').value);
+      const fyk=parseFloat(document.getElementById('fyk').value);
+      gc=parseFloat(document.getElementById('gammac').value);
+      gs=parseFloat(document.getElementById('gammas').value);
+      fcd=fck/gc; fyd=fyk/gs; fckVal=fck; fykVal=fyk;
+      document.getElementById('mat_out').innerText=`fcd = ${fcd.toFixed(2)} МПа\nfyd = ${fyd.toFixed(2)} МПа`;
+    }
+    updMats();
+
+    // Балка изгиб
+    function calcBeam(){
+      const b=+b.value, h=+h.value, c=+cover.value, ph=+phi.value, M=+Med.value*1e6; // N·мм
+      const d = h - c - ph/2; // мм
+      const z = 0.9*d; // мм
+      const As_req = M / (z * (fyd*1e6/1e3)); // мм²  (преобразование: fyd МПа=Н/мм²; M Н·мм; z мм)
+      const As_min = 0.0013 * b * d;
+      const As_use = Math.max(As_req, As_min);
+      // Подбор грубый: количество φ16
+      const areaBar = Math.PI*ph*ph/4;
+      const nBars = Math.ceil(As_use/areaBar);
+      const util = As_req/As_use;
+      document.getElementById('beam_out').innerText =
+        `d≈${d.toFixed(0)} мм, z≈${z.toFixed(0)} мм\nAs,req=${As_req.toFixed(0)} мм²; As,min=${As_min.toFixed(0)} мм²\nРекомендуемо: As≈${As_use.toFixed(0)} мм² → φ${ph}×${nBars} (Σ=${(nBars*areaBar).toFixed(0)} мм²)`;
+    }
+
+    // Плита (на 1 м ширины)
+    function calcSlab(){
+      const h=+sl_h.value, c=+sl_c.value, ph=+sl_phi.value, M=+sl_Med.value*1e6; // N·мм/м
+      const d = h - c - ph/2;
+      const z = 0.9*d;
+      const As_req = M / (z * (fyd*1e6/1e3)); // мм² на метр
+      const As_min = 0.0013 * 1000 * d; // b=1000 мм
+      const As_use = Math.max(As_req, As_min);
+      const areaBar = Math.PI*ph*ph/4; // мм²/стержень
+      const s = (areaBar/As_use)*1000; // мм
+      document.getElementById('sl_out').innerText =
+        `d≈${d.toFixed(0)} мм, z≈${z.toFixed(0)} мм\nAs,req=${As_req.toFixed(0)} мм²/м; As,min=${As_min.toFixed(0)} мм²/м\nПодбор: φ${ph} с шагом s≈${s.toFixed(0)} мм`;
+    }
+
+    // Пробивная срезка
+    function calcPunch(){
+      const c1=+pc_c1.value, c2=+pc_c2.value, h=+pc_h.value, cov=+pc_cov.value, ph=+pc_phi.value, Ved=+pc_Ved.value*1e3; // N
+      const d = h - cov - ph/2; // мм
+      const b0 = 2*(c1 + c2 + 4*d); // мм — приближённо контур на 2d
+      // ρl оценим как As_min/(b*d) для плиты
+      const rho_l = 0.0013; // грубо
+      const k = Math.min(2.0, 1 + Math.sqrt(200/Math.max(100,d))); // d в мм (ограничим минимум)
+      const vEd = Ved / (b0 * d); // Н/мм² = МПа
+      const vRdc = (0.18/gc) * k * Math.pow(100*rho_l*fckVal, 1/3);
+      const util = vEd / vRdc;
+      const cls = util<=1? 'ok' : (util<=1.15? 'warn':'bad');
+      const msg = util<=1? 'ОК' : (util<=1.15? 'На грани':'Недостаточно');
+      document.getElementById('pc_out').innerHTML =
+        `d≈${d.toFixed(0)} мм; b0≈${b0.toFixed(0)} мм\nvEd=${vEd.toFixed(3)} МПа; vRdc=${vRdc.toFixed(3)} МПа → `+
+        `<b class="${cls}">${msg}</b> (util=${util.toFixed(2)})`;
+    }
+
+    // Колонна осевая
+    function calcColumn(){
+      const b=+col_b.value, h=+col_h.value, rho=+col_rho.value/100.0, Ned=+col_Ned.value*1e3; // N
+      const Ac = b*h; // мм²
+      const As = rho*Ac; // мм²
+      const Nrd = 0.85*(fcd*1e6/1e3)*Ac + (fyd*1e6/1e3)*As; // Н (перевод МПа→Н/мм²)
+      const util = Ned/Nrd;
+      const cls = util<=1? 'ok' : (util<=1.1? 'warn':'bad');
+      const msg = util<=1? 'ОК' : (util<=1.1? 'На грани':'Недостаточно');
+      document.getElementById('col_out').innerHTML =
+        `Ac=${Ac.toFixed(0)} мм²; As=${As.toFixed(0)} мм²\nNrd≈${(Nrd/1000).toFixed(0)} кН → <b class="${cls}">${msg}</b> (util=${util.toFixed(2)})`;
+    }
+
+    // Утилиты
+    function calcUtils(){
+      const ph=+u_phi.value, L=+u_len.value;
+      const kgpm = 0.006165*ph*ph; // кг/м
+      const mbar = kgpm*L;
+      const b=+u_b.value, h=+u_h.value, len=+u_L.value, rho=+u_rho.value; // м, т/м3
+      const V = b*h*len; // м³
+      const mcon = V*rho; // т
+      document.getElementById('u_out').innerText =
+        `Арматура: ${kgpm.toFixed(3)} кг/м → на ${L} м: ${mbar.toFixed(2)} кг\nБетон: V=${V.toFixed(3)} м³ → масса ≈ ${mcon.toFixed(2)} т`;
+    }
+
+    // авто‑инициализация
+    window.addEventListener('DOMContentLoaded',()=>{updMats();calcBeam();calcSlab();calcPunch();calcColumn();calcUtils();});
+  </script>
+</body>
+</html>

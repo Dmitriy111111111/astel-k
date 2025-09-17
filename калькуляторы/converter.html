@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Конвертер физических величин</title>
+<style>
+  :root{--bg:#0b0c10;--fg:#e8e8e8;--muted:#9aa0a6;--card:#151820;--accent:#4e9af1;}
+  *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Arial}
+  .wrap{max-width:980px;margin:28px auto;padding:0 14px}
+  h1{font-size:1.45rem;margin:8px 0 16px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+  .card{background:var(--card);border:1px solid #242a33;border-radius:14px;padding:16px;box-shadow:0 6px 24px rgba(0,0,0,.25)}
+  label{display:block;margin:0 0 6px;color:var(--muted)}
+  select,input{width:100%;padding:10px 12px;border:1px solid #2b3240;border-radius:10px;background:#0e1118;color:var(--fg)}
+  input[type=number]{appearance:textfield}
+  input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{appearance:none;margin:0}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .btn{padding:10px 14px;border:0;border-radius:10px;background:var(--accent);color:#fff;cursor:pointer}
+  .btn.secondary{background:#3b4452}
+  .mono{font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace}
+  .muted{color:var(--muted)}
+  .swap{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:10px;border:1px solid #2b3240;background:#10141d;cursor:pointer}
+  .footer{margin-top:12px;color:var(--muted);font-size:.9rem}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Конвертер физических величин</h1>
+
+    <div class="card" id="app">
+      <div class="grid">
+        <div>
+          <label>Категория</label>
+          <select id="category"></select>
+        </div>
+        <div>
+          <label>Из единицы</label>
+          <select id="from"></select>
+        </div>
+        <div>
+          <label>В единицу</label>
+          <select id="to"></select>
+        </div>
+        <div>
+          <label>Значение</label>
+          <input id="value" type="text" inputmode="decimal" placeholder="Например: 12,5" />
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:12px">
+        <button class="swap" id="swap" title="Поменять местами">⟷</button>
+        <button class="btn" id="copy">Скопировать результат</button>
+        <span class="muted">Автоконвертация при вводе</span>
+      </div>
+
+      <div class="card" style="margin-top:14px">
+        <div class="muted">Результат</div>
+        <div id="result" class="mono" style="font-size:1.2rem;margin-top:6px">—</div>
+      </div>
+
+      <div class="footer">Поддерживаются длина, масса, температура, давление, скорость, площадь, объём, энергия, мощность, время, частота, сила, крутящий момент.</div>
+    </div>
+  </div>
+
+<script>
+const categories = {
+  length: {
+    name: 'Длина',
+    base: 'm',
+    units: {
+      'nm': 1e-9, 'µm': 1e-6, 'mm': 1e-3, 'cm': 1e-2, 'm': 1, 'km': 1e3,
+      'in': 0.0254, 'ft': 0.3048, 'yd': 0.9144, 'mi': 1609.344
+    }
+  },
+  mass: {
+    name: 'Масса',
+    base: 'kg',
+    units: {
+      'mg': 1e-6, 'g': 1e-3, 'kg': 1, 't': 1000,
+      'lb': 0.45359237, 'oz': 0.028349523125
+    }
+  },
+  temperature: {
+    name: 'Температура',
+    special: 'temperature', // отдельная обработка
+    units: { '°C': null, 'K': null, '°F': null }
+  },
+  pressure: {
+    name: 'Давление', base: 'Pa', units: {
+      'Pa': 1, 'kPa': 1e3, 'MPa': 1e6, 'bar': 1e5, 'atm': 101325,
+      'mmHg': 133.3223684211, 'psi': 6894.757293168
+    }
+  },
+  speed: {
+    name: 'Скорость', base: 'm/s', units: {
+      'm/s': 1, 'km/h': 1000/3600, 'mph': 1609.344/3600, 'kt': 1852/3600
+    }
+  },
+  area: {
+    name: 'Площадь', base: 'm²', units: {
+      'mm²': 1e-6, 'cm²': 1e-4, 'm²': 1, 'a': 100, 'ha': 1e4, 'km²': 1e6,
+      'in²': 0.00064516, 'ft²': 0.09290304
+    }
+  },
+  volume: {
+    name: 'Объём', base: 'm³', units: {
+      'cm³': 1e-6, 'mL': 1e-6, 'L': 1e-3, 'm³': 1,
+      'in³': 0.000016387064, 'ft³': 0.028316846592,
+      'gal (US)': 0.003785411784, 'gal (UK)': 0.00454609
+    }
+  },
+  energy: {
+    name: 'Энергия', base: 'J', units: {
+      'J': 1, 'kJ': 1e3, 'Wh': 3600, 'kWh': 3.6e6,
+      'cal': 4.184, 'kcal': 4184, 'BTU': 1055.05585262
+    }
+  },
+  power: {
+    name: 'Мощность', base: 'W', units: {
+      'W': 1, 'kW': 1e3, 'MW': 1e6, 'hp (metric)': 735.49875, 'hp (US)': 745.6998715822702
+    }
+  },
+  time: {
+    name: 'Время', base: 's', units: { 'ms': 1e-3, 's': 1, 'min': 60, 'h': 3600, 'day': 86400 }
+  },
+  frequency: {
+    name: 'Частота', base: 'Hz', units: { 'Hz': 1, 'kHz': 1e3, 'MHz': 1e6, 'GHz': 1e9, 'rpm': 1/60 }
+  },
+  force: {
+    name: 'Сила', base: 'N', units: { 'N': 1, 'kN': 1e3, 'kgf': 9.80665, 'lbf': 4.4482216152605 }
+  },
+  torque: {
+    name: 'Крутящий момент', base: 'N·m', units: { 'N·m': 1, 'kN·m': 1e3, 'lbf·ft': 1.3558179483314, 'lbf·in': 0.11298482902762 }
+  }
+};
+
+function formatNumber(x){
+  if (!Number.isFinite(x)) return '—';
+  const abs = Math.abs(x);
+  const opts = {maximumFractionDigits: 10};
+  let s = (abs!==0 && (abs<1e-4 || abs>=1e6)) ? x.toExponential(6) : x.toLocaleString('ru-RU', opts);
+  return s.replace(/,/g,' '); // тонкие пробелы вместо запятых тысяч
+}
+
+function parseLocaleFloat(s){
+  if (typeof s !== 'string') return NaN;
+  // допускаем «12,5», пробелы, тонкие пробелы
+  s = s.trim().replace(/[\s\u00A0]/g,'').replace(',', '.');
+  return Number.parseFloat(s);
+}
+
+// Температура: переводим в Кельвины и обратно (аффинные преобразования)
+function tempToK(v, unit){
+  switch(unit){
+    case 'K': return v;
+    case '°C': return v + 273.15;
+    case '°F': return (v - 32) * 5/9 + 273.15;
+    default: return NaN;
+  }
+}
+function kToTemp(k, unit){
+  switch(unit){
+    case 'K': return k;
+    case '°C': return k - 273.15;
+    case '°F': return (k - 273.15) * 9/5 + 32;
+    default: return NaN;
+  }
+}
+
+const $cat = document.getElementById('category');
+const $from = document.getElementById('from');
+const $to = document.getElementById('to');
+const $val = document.getElementById('value');
+const $res = document.getElementById('result');
+
+function fillCategories(){
+  for (const [key, cfg] of Object.entries(categories)){
+    const opt = document.createElement('option');
+    opt.value = key; opt.textContent = cfg.name; $cat.appendChild(opt);
+  }
+}
+
+function fillUnits(catKey){
+  const cfg = categories[catKey];
+  $from.innerHTML=''; $to.innerHTML='';
+  for (const u of Object.keys(cfg.units)){
+    const o1=document.createElement('option'); o1.value=u; o1.textContent=u; $from.appendChild(o1);
+    const o2=document.createElement('option'); o2.value=u; o2.textContent=u; $to.appendChild(o2);
+  }
+  // дефолты
+  $from.selectedIndex = 0;
+  $to.selectedIndex = Math.min(2, $to.options.length-1);
+}
+
+function convert(){
+  const catKey = $cat.value; const cfg = categories[catKey];
+  const from = $from.value; const to = $to.value;
+  const v = parseLocaleFloat($val.value);
+  if (!Number.isFinite(v)) { $res.textContent = 'Введите число'; return; }
+
+  let out;
+  if (cfg.special === 'temperature'){
+    const k = tempToK(v, from);
+    out = kToTemp(k, to);
+  } else {
+    const baseFrom = cfg.units[from];
+    const baseTo = cfg.units[to];
+    out = v * baseFrom / baseTo; // сначала в базовую (SI), затем в целевую
+  }
+  $res.textContent = `${formatNumber(v)} ${from} = ${formatNumber(out)} ${to}`;
+}
+
+function swapUnits(){
+  const i1 = $from.selectedIndex; const i2=$to.selectedIndex; $from.selectedIndex=i2; $to.selectedIndex=i1; convert();
+}
+
+function copyResult(){
+  const t = $res.textContent.trim(); if(!t || t==='—') return;
+  navigator.clipboard?.writeText(t);
+}
+
+$cat.addEventListener('change', ()=>{ fillUnits($cat.value); convert(); });
+$from.addEventListener('change', convert);
+$to.addEventListener('change', convert);
+$val.addEventListener('input', convert);
+
+document.getElementById('swap').addEventListener('click', swapUnits);
+
+document.getElementById('copy').addEventListener('click', copyResult);
+
+// init
+fillCategories();
+$cat.value = 'length';
+fillUnits('length');
+$val.value = '1';
+convert();
+</script>
+</body>
+</html>

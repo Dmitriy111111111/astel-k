@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Калькуляторы для ГИПа</title>
+  <style>
+    :root{
+      --bg:#0b0f14; --card:#101821; --ink:#e9f0fb; --muted:#9fb0c5; --acc:#7ad0ff; --ring:rgba(122,208,255,.35); --danger:#ff6b6b;
+    }
+    *{box-sizing:border-box}
+    body{margin:0; background:var(--bg); color:var(--ink); font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial}
+    .wrap{max-width:1200px; margin:0 auto; padding:24px}
+    h1{font-size:clamp(20px,3vw,32px); margin:0 0 12px}
+    p.lead{color:var(--muted); margin:0 0 20px}
+
+    .toolbar{position:sticky; top:0; z-index:30; background:linear-gradient(180deg,rgba(11,15,20,.95),rgba(11,15,20,.85)); border-bottom:1px solid #1b2533; backdrop-filter:blur(6px)}
+    .toolbar .wrap{display:flex; gap:8px; flex-wrap:wrap}
+    .btn{display:inline-flex; gap:8px; align-items:center; padding:9px 12px; border-radius:12px; border:1px solid #1f2a3b; background:#0f1722; color:var(--ink); text-decoration:none; cursor:pointer}
+    .btn:hover{border-color:#2a3a55}
+    .btn.primary{background:linear-gradient(180deg,#bfe6ff,#57c0ff); color:#07263b; border-color:#45a6df}
+
+    .card{background:var(--card); border:1px solid #1b2533; border-radius:16px; padding:16px; box-shadow:0 6px 18px rgba(0,0,0,.25); margin-bottom:16px}
+    .card h2{margin:0 0 6px; font-size:18px}
+    .badge{font-size:12px; padding:4px 8px; border:1px solid #27364e; border-radius:999px; color:#c9daee; display:inline-block; margin:4px 6px 10px 0}
+    .field{display:flex; gap:10px; align-items:center; margin:10px 0}
+    .field label{min-width:220px; color:var(--muted)}
+    .field input, .field select, .field textarea{flex:1; background:#0e141c; color:var(--ink); border:1px solid #243043; border-radius:10px; padding:10px 12px; outline:none}
+    .field input:focus, .field select:focus, .field textarea:focus{border-color:var(--acc); box-shadow:0 0 0 4px var(--ring)}
+    .row{display:flex; gap:8px; flex-wrap:wrap}
+    .out{background:#0c1119; border:1px dashed #243043; padding:12px; border-radius:12px; color:#dbe8f7; font-family:ui-monospace,consolas,menlo,monaco,monospace}
+    .note{font-size:12px; color:#8fa0b6}
+    .err{color:var(--danger); font-weight:600}
+    .section{scroll-margin-top:76px}
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <div class="wrap">
+      <a class="btn" href="#team">Команда ⇄ сроки</a>
+      <a class="btn" href="#cost">Сметный разбор</a>
+      <a class="btn" href="#evm">EVM‑метрики</a>
+      <a class="btn" href="#cash">Кэш‑флоу по этапам</a>
+      <a class="btn" href="#risk">Риски (матрица)</a>
+      <a class="btn" href="#buffer">Буферы сроков</a>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <h1>Калькуляторы для ГИПа</h1>
+    <p class="lead">Практичные расчёты для управления проектом: размер команды/сроки, разбор стоимости с НДС, метрики EVM, распределение кэш‑флоу, матрица рисков и буферы.</p>
+
+    <!-- TEAM / DURATION -->
+    <div id="team" class="card section">
+      <h2>Команда ⇄ сроки (человеко‑часы, загрузка)</h2>
+      <span class="badge">HH = Σ объём работ, ч</span>
+      <span class="badge">Продолжительность T = HH / (N · L · 8)</span>
+      <span class="badge">N = HH / (T · L · 8)</span>
+      <div class="field"><label>Объём работ, человеко‑часы (HH)</label><input id="tm_hh" type="number" step="1" value="4800"></div>
+      <div class="field"><label>Доля загрузки L (0..1)</label><input id="tm_load" type="number" step="0.05" value="0.8"></div>
+      <div class="field"><label>Рабочих часов в день</label><input id="tm_hpd" type="number" step="0.5" value="8"></div>
+      <div class="row">
+        <div class="field"><label>Рассчитать: при команде N, чел</label><input id="tm_N" type="number" step="1" value="6"></div>
+        <button class="btn primary" onclick="calcDuration()">Срок по N</button>
+      </div>
+      <div class="row">
+        <div class="field"><label>Или при сроке T, недель</label><input id="tm_Tw" type="number" step="0.5" value="10"></div>
+        <button class="btn" onclick="calcTeam()">Команда по T</button>
+      </div>
+      <div id="outTeam" class="out">—</div>
+      <div class="note">T считается по календарю рабочих дней (5/2 не учитывается). Для приближения умножьте недели на 5 рабочих дней.</div>
+    </div>
+
+    <!-- COST BREAKDOWN -->
+    <div id="cost" class="card section">
+      <h2>Сметный разбор: накладные, резерв, прибыль, НДС</h2>
+      <span class="badge">Итого = Прямые + Накладные% + Резерв% + Прибыль% + НДС%</span>
+      <div class="field"><label>Прямые затраты, ₸</label><input id="ct_direct" type="number" step="1" value="12000000"></div>
+      <div class="field"><label>Накладные, % от прямых</label><input id="ct_oh" type="number" step="0.1" value="15"></div>
+      <div class="field"><label>Резерв на риски (contingency), %</label><input id="ct_cont" type="number" step="0.1" value="10"></div>
+      <div class="field"><label>Прибыль, %</label><input id="ct_fee" type="number" step="0.1" value="12"></div>
+      <div class="field"><label>НДС, %</label><input id="ct_vat" type="number" step="0.1" value="12"></div>
+      <div class="row"><button class="btn primary" onclick="calcCost()">Рассчитать стоимость</button></div>
+      <div id="outCost" class="out">—</div>
+      <div class="note">По умолчанию НДС 12% (KZ). При необходимости измените под ваш режим.</div>
+    </div>
+
+    <!-- EVM -->
+    <div id="evm" class="card section">
+      <h2>Earned Value (EVM): SPI, CPI, EAC</h2>
+      <span class="badge">SV = EV − PV</span>
+      <span class="badge">CV = EV − AC</span>
+      <span class="badge">SPI = EV / PV</span>
+      <span class="badge">CPI = EV / AC</span>
+      <span class="badge">EAC = BAC / CPI</span>
+      <div class="field"><label>PV (плановая стоимость), ₸</label><input id="evm_pv" type="number" step="1" value="6000000"></div>
+      <div class="field"><label>EV (освоенный объём), ₸</label><input id="evm_ev" type="number" step="1" value="5200000"></div>
+      <div class="field"><label>AC (факт. затраты), ₸</label><input id="evm_ac" type="number" step="1" value="5800000"></div>
+      <div class="field"><label>BAC (бюджет всего проекта), ₸</label><input id="evm_bac" type="number" step="1" value="15000000"></div>
+      <div class="row"><button class="btn primary" onclick="calcEVM()">Рассчитать EVM</button></div>
+      <div id="outEVM" class="out">—</div>
+      <div class="note">SPI < 1 — отставание по срокам, CPI < 1 — перерасход. EAC — прогноз завершения по текущей эффективности затрат.</div>
+    </div>
+
+    <!-- CASH FLOW -->
+    <div id="cash" class="card section">
+      <h2>Кэш‑флоу по этапам (распределение бюджета)</h2>
+      <span class="badge">Σ долей = 100%</span>
+      <div class="field"><label>Общий бюджет (без НДС), ₸</label><input id="cf_total" type="number" step="1" value="10000000"></div>
+      <div class="field"><label>Доли этапов, % (через запятую)</label><input id="cf_shares" type="text" value="10,20,25,25,20"></div>
+      <div class="row"><button class="btn primary" onclick="calcCash()">Рассчитать распределение</button></div>
+      <div id="outCash" class="out">—</div>
+      <div class="note">Вводите любое число этапов. Если сумма долей ≠ 100%, результат подсветится ошибкой.</div>
+    </div>
+
+    <!-- RISK MATRIX -->
+    <div id="risk" class="card section">
+      <h2>Риски: приоритизация (P×I) и резерв</h2>
+      <span class="badge">Список: имя;P;I;резерв₸</span>
+      <div class="field"><label>Риски (по строкам)</label><textarea id="rk_list" rows="6" placeholder="Пример:\nПотеря ключевого инженера;0.3;0.6;2000000\nСрыв поставки;0.2;0.7;1500000\nОшибки в ТЗ;0.4;0.5;800000"></textarea></div>
+      <div class="row"><button class="btn primary" onclick="calcRisk()">Рассчитать приоритеты</button></div>
+      <div id="outRisk" class="out">—</div>
+      <div class="note">P — вероятность (0..1), I — влияние (0..1, относительное). Приоритет = P×I. Суммарный резерв — сумма резервов по рискам.</div>
+    </div>
+
+    <!-- TIME BUFFERS -->
+    <div id="buffer" class="card section">
+      <h2>Буферы сроков (простой метод)</h2>
+      <span class="badge">Буфер ≈ k · σ_пессимизма</span>
+      <div class="field"><label>Плановая длительность критического пути, недель</label><input id="bf_Tplan" type="number" step="0.5" value="16"></div>
+      <div class="field"><label>Запас (пессимизм) на ключевые задачи, недель</label><input id="bf_sigma" type="number" step="0.5" value="3"></div>
+      <div class="field"><label>Коэффициент k (обычно 0.5…1.0)</label><input id="bf_k" type="number" step="0.1" value="0.7"></div>
+      <div class="row"><button class="btn primary" onclick="calcBuffer()">Рассчитать буфер</button></div>
+      <div id="outBuffer" class="out">—</div>
+      <div class="note">Для быстрых оценок: проектный буфер = k×σ. Для консервативного подхода увеличьте k.</div>
+    </div>
+
+    <div class="card">
+      <h2>Вставка на вашу страницу</h2>
+      <div class="out"><code>&lt;a class="btn" href="calculators_gip.html" target="_blank" rel="noopener"&gt;Калькуляторы для ГИПа&lt;/a&gt;</code></div>
+    </div>
+  </div>
+
+<script>
+  const fmt = (x,d=2)=> isFinite(x)? Number(x).toLocaleString('ru-RU',{maximumFractionDigits:d}) : '—';
+  const val = id => parseFloat(document.getElementById(id).value);
+  const out = (id,html)=> document.getElementById(id).innerHTML = html;
+
+  // Team -> Duration
+  function calcDuration(){
+    const HH = val('tm_hh');
+    const L = val('tm_load');
+    const hpd = val('tm_hpd');
+    const N = val('tm_N');
+    if(HH<=0||L<=0||hpd<=0||N<=0){ out('outTeam','<span class="err">Проверьте ввод</span>'); return; }
+    const days = HH/(N*L*hpd);
+    const weeks = days/5; // грубо
+    out('outTeam', `Срок ≈ <b>${fmt(weeks,2)} нед</b> (<span class="note">${fmt(days,1)} раб.дн</span>) при N=${N}, загрузке ${fmt(L*100,0)}% и ${hpd} ч/день.`);
+  }
+  // Duration -> Team
+  function calcTeam(){
+    const HH = val('tm_hh');
+    const L = val('tm_load');
+    const hpd = val('tm_hpd');
+    const Tw = val('tm_Tw');
+    if(HH<=0||L<=0||hpd<=0||Tw<=0){ out('outTeam','<span class="err">Проверьте ввод</span>'); return; }
+    const days = Tw*5;
+    const N = HH/(L*hpd*days);
+    out('outTeam', `Нужна команда ≈ <b>${fmt(N,2)} чел</b> при сроке ${Tw} нед, загрузке ${fmt(L*100,0)}% и ${hpd} ч/день.`);
+  }
+
+  // Cost breakdown
+  function calcCost(){
+    const direct = val('ct_direct');
+    const oh = val('ct_oh')/100;
+    const cont = val('ct_cont')/100;
+    const fee = val('ct_fee')/100;
+    const vat = val('ct_vat')/100;
+    if(direct<0){ out('outCost','<span class="err">Прямые ≥ 0</span>'); return; }
+    const overhead = direct*oh;
+    const base = direct+overhead;
+    const reserve = base*cont;
+    const subtotal = base+reserve;
+    const profit = subtotal*fee;
+    const taxable = subtotal+profit;
+    const vatAmt = taxable*vat;
+    const total = taxable+vatAmt;
+    out('outCost', `Накладные: <b>${fmt(overhead,0)} ₸</b><br>Резерв (cont): <b>${fmt(reserve,0)} ₸</b><br>Прибыль: <b>${fmt(profit,0)} ₸</b><br>НДС: <b>${fmt(vatAmt,0)} ₸</b><br><hr>ИТОГО к договору: <b>${fmt(total,0)} ₸</b>`);
+  }
+
+  // EVM
+  function calcEVM(){
+    const PV = val('evm_pv');
+    const EV = val('evm_ev');
+    const AC = val('evm_ac');
+    const BAC = val('evm_bac');
+    if(PV<=0||AC<=0||BAC<=0){ out('outEVM','<span class="err">PV, AC, BAC > 0</span>'); return; }
+    const SV = EV-PV;
+    const CV = EV-AC;
+    const SPI = EV/PV;
+    const CPI = EV/AC;
+    const EAC = BAC/CPI;
+    out('outEVM', `SV = <b>${fmt(SV,0)} ₸</b>; CV = <b>${fmt(CV,0)} ₸</b><br>SPI = <b>${fmt(SPI,2)}</b>; CPI = <b>${fmt(CPI,2)}</b><br>EAC ≈ <b>${fmt(EAC,0)} ₸</b>`);
+  }
+
+  // Cash‑flow
+  function calcCash(){
+    const total = val('cf_total');
+    const sharesStr = document.getElementById('cf_shares').value.trim();
+    const shares = sharesStr.split(/[,;\s]+/).filter(Boolean).map(Number);
+    if(total<=0||shares.length===0){ out('outCash','<span class="err">Введите бюджет и доли</span>'); return; }
+    const sum = shares.reduce((a,b)=>a+b,0);
+    let html = '';
+    if(Math.abs(sum-100)>0.01){ html += `<span class=err>Сумма долей = ${fmt(sum,2)}% (должна быть 100%)</span><br>`; }
+    html += 'Этапы:\n';
+    let acc = 0;
+    shares.forEach((p,i)=>{
+      const amt = total*p/100;
+      acc += amt;
+      html += `${i+1}. ${fmt(p,2)}% → ${fmt(amt,0)} ₸  (Σ=${fmt(acc,0)} ₸)\n`;
+    });
+    out('outCash', `<pre>${html}</pre>`);
+  }
+
+  // Risk matrix
+  function calcRisk(){
+    const text = document.getElementById('rk_list').value.trim();
+    if(!text){ out('outRisk','<span class="err">Добавьте строки рисков</span>'); return; }
+    const rows = text.split(/\n+/).map(l=>l.trim()).filter(Boolean);
+    const items = [];
+    let sumReserve = 0;
+    for(const r of rows){
+      const parts = r.split(';');
+      if(parts.length<4) continue;
+      const name = parts[0].trim();
+      const P = Number(parts[1]);
+      const I = Number(parts[2]);
+      const R = Number(parts[3]);
+      if(!name||!isFinite(P)||!isFinite(I)||!isFinite(R)) continue;
+      const score = P*I;
+      sumReserve += R;
+      items.push({name,P,I,R,score});
+    }
+    items.sort((a,b)=> b.score-a.score);
+    let html = 'Приоритеты (max → min):\n';
+    items.forEach((it,i)=>{
+      html += `${i+1}. ${it.name} — P=${fmt(it.P,2)}, I=${fmt(it.I,2)}, Score=${fmt(it.score,2)}, Резерв=${fmt(it.R,0)} ₸\n`;
+    });
+    html += `\nΣ резервов: ${fmt(sumReserve,0)} ₸`;
+    out('outRisk', `<pre>${html}</pre>`);
+  }
+
+  // Buffers
+  function calcBuffer(){
+    const T = val('bf_Tplan');
+    const s = val('bf_sigma');
+    const k = val('bf_k');
+    if(T<=0||s<0||k<0){ out('outBuffer','<span class="err">Проверьте ввод</span>'); return; }
+    const buf = k*s;
+    const Ttot = T+buf;
+    out('outBuffer', `Рекомендуемый буфер: <b>${fmt(buf,2)} нед</b><br>Итого срок с буфером ≈ <b>${fmt(Ttot,2)} нед</b>`);
+  }
+</script>
+</body>
+</html>

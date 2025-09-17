@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Калькулятор для Дата‑аналитика — быстрые проверки</title>
+  <style>
+    :root{--bg:#0f172a;--card:#111827;--muted:#94a3b8;--acc:#22d3ee;--ok:#22c55e;--warn:#f59e0b;--bad:#ef4444}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,Segoe UI,Inter,Roboto,Arial,sans-serif;background:linear-gradient(180deg,#0b1022,#0f172a);color:#e5e7eb}
+    header{padding:24px 16px;text-align:center}
+    header h1{margin:0;font-size:28px}
+    header p{margin:8px 0 0;color:var(--muted)}
+    .container{max-width:1200px;margin:0 auto;padding:16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:16px}
+    .card{background:rgba(17,24,39,.85);backdrop-filter:saturate(140%) blur(6px);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:16px;box-shadow:0 10px 24px rgba(0,0,0,.35)}
+    .card h2{margin:0 0 10px;font-size:18px}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:8px 0}
+    label{font-size:12px;color:var(--muted)}
+    input,select,textarea{width:100%;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.08);background:#0b1220;color:#e5e7eb;outline:none}
+    textarea{min-height:90px;resize:vertical}
+    input:focus,select:focus,textarea:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(34,211,238,.15)}
+    .btn{display:inline-block;margin-top:8px;padding:8px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.12);cursor:pointer;background:#0b1220;color:#e5e7eb}
+    .btn:hover{border-color:var(--acc)}
+    .out{margin-top:10px;padding:10px;border-radius:12px;background:#0b1220;border:1px dashed rgba(255,255,255,.08);font-variant-numeric:tabular-nums;white-space:pre-line}
+    .muted{color:var(--muted);font-size:12px}
+    .tag{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.12);font-size:12px;color:#cbd5e1}
+    .ok{color:var(--ok)}.warn{color:var(--warn)}.bad{color:var(--bad)}
+    .mono{font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Калькулятор для Дата‑аналитика</h1>
+    <p>Описательная статистика · A/B‑тест (proportions) · Размер выборки · ДИ среднего · Корреляция · Лин. регрессия · CAGR/рост</p>
+  </header>
+
+  <main class="container">
+    <!-- 1) Descriptive stats -->
+    <section class="card" id="desc">
+      <h2>Описательная статистика</h2>
+      <label>Числа (через запятую/пробел/новую строку)</label>
+      <textarea id="desc_vals" class="mono">12, 15, 9, 21, 18, 18, 16</textarea>
+      <div class="row">
+        <div>
+          <label>Процентили p1;p2;… (0–100)</label>
+          <input id="desc_pcts" value="25;50;75">
+        </div>
+        <div>
+          <label>Обрезка хвостов, % (каждый)</label>
+          <input type="number" id="desc_trim" value="0" step="1" min="0" max="45">
+        </div>
+      </div>
+      <button class="btn" onclick="calcDesc()">Рассчитать</button>
+      <div class="out" id="desc_out"></div>
+      <p class="muted">Считаем n, min/max, среднее, медиану, σ (несмещ.), IQR, процентили, trimmed‑mean.</p>
+    </section>
+
+    <!-- 2) AB test proportions -->
+    <section class="card" id="ab">
+      <h2>A/B‑тест (доли, Z‑тест)</h2>
+      <div class="row">
+        <div>
+          <label>A: успехи / всего</label>
+          <input id="a_succ_total" value="120/3000" class="mono">
+        </div>
+        <div>
+          <label>B: успехи / всего</label>
+          <input id="b_succ_total" value="165/3100" class="mono">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Уровень значимости, α</label>
+          <input type="number" id="ab_alpha" value="0.05" step="0.01">
+        </div>
+        <div>
+          <label>Пуллированный вариант</label>
+          <select id="ab_pooled"><option value="1" selected>Да (стандартный)</option><option value="0">Нет</option></select>
+        </div>
+      </div>
+      <button class="btn" onclick="calcAB()">Проверить</button>
+      <div class="out" id="ab_out"></div>
+      <p class="muted">H0: pA = pB. Z‑статистика и p‑value (двусторон.). Добавлен 95% ДИ разницы.</p>
+    </section>
+
+    <!-- 3) Sample size proportions -->
+    <section class="card" id="ss">
+      <h2>Размер выборки (доли)</h2>
+      <div class="row">
+        <div>
+          <label>Ожидаемая доля p</label>
+          <input type="number" id="ss_p" value="0.1" step="0.01" min="0" max="1">
+        </div>
+        <div>
+          <label>Погрешность (абс.)</label>
+          <input type="number" id="ss_e" value="0.02" step="0.005" min="0.001">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Доверие</label>
+          <select id="ss_conf">
+            <option value="1.64">90%</option>
+            <option value="1.96" selected>95%</option>
+            <option value="2.58">99%</option>
+          </select>
+        </div>
+        <div>
+          <label>Поправка на конечную совокупность (N, опц.)</label>
+          <input type="number" id="ss_N" placeholder="например 100000" step="1">
+        </div>
+      </div>
+      <button class="btn" onclick="calcSS()">Рассчитать</button>
+      <div class="out" id="ss_out"></div>
+      <p class="muted">n₀ = z²·p(1−p)/e²; при конечной совокупности: n = n₀·N/(N+n₀−1).</p>
+    </section>
+
+    <!-- 4) CI for mean -->
+    <section class="card" id="ci">
+      <h2>Доверительный интервал среднего</h2>
+      <div class="row">
+        <div>
+          <label>Среднее</label>
+          <input type="number" id="ci_mean" value="120.5" step="0.1">
+        </div>
+        <div>
+          <label>Ст. отклонение (σ или s)</label>
+          <input type="number" id="ci_sd" value="30" step="0.1">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Размер n</label>
+          <input type="number" id="ci_n" value="64" step="1">
+        </div>
+        <div>
+          <label>Доверие</label>
+          <select id="ci_z">
+            <option value="1.64">90%</option>
+            <option value="1.96" selected>95%</option>
+            <option value="2.58">99%</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn" onclick="calcCI()">Посчитать ДИ</button>
+      <div class="out" id="ci_out"></div>
+      <p class="muted">Если σ неизвестна и n мало — используйте t‑критерий (пока z‑аппроксимация).</p>
+    </section>
+
+    <!-- 5) Correlation -->
+    <section class="card" id="corr">
+      <h2>Корреляция (Пирсон)</h2>
+      <label>X‑массив</label>
+      <textarea id="corr_x" class="mono">1, 2, 3, 4, 5, 6</textarea>
+      <label>Y‑массив</label>
+      <textarea id="corr_y" class="mono">1.1, 1.9, 3.2, 3.8, 5.1, 6.2</textarea>
+      <button class="btn" onclick="calcCorr()">Рассчитать r</button>
+      <div class="out" id="corr_out"></div>
+      <p class="muted">Считаем r, R² и p‑value (асимпт.).</p>
+    </section>
+
+    <!-- 6) Simple linear regression -->
+    <section class="card" id="linreg">
+      <h2>Простая линейная регрессия (Y=a+bX)</h2>
+      <label>Точки X,Y (по строке на точку; разделитель запятая)</label>
+      <textarea id="lr_pairs" class="mono">1,1.1
+2,1.9
+3,3.2
+4,3.8
+5,5.1
+6,6.2</textarea>
+      <div class="row">
+        <div>
+          <label>Прогноз X*</label>
+          <input id="lr_xstar" value="7" type="number" step="0.1">
+        </div>
+        <div>
+          <label>Доверие прогноза</label>
+          <select id="lr_z">
+            <option value="1.64">90%</option>
+            <option value="1.96" selected>95%</option>
+            <option value="2.58">99%</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn" onclick="calcLinReg()">Оценить модель</button>
+      <div class="out" id="lr_out"></div>
+      <p class="muted">Выводим a,b, R² и интервал прогноза для X*.</p>
+    </section>
+
+    <!-- 7) Growth -->
+    <section class="card" id="growth">
+      <h2>Рост: CAGR и абсолютный</h2>
+      <div class="row">
+        <div>
+          <label>Начало → Конец</label>
+          <input id="gr_start_end" value="1000→1720" class="mono">
+        </div>
+        <div>
+          <label>Периодов (лет/мес)</label>
+          <input type="number" id="gr_n" value="3" step="1">
+        </div>
+      </div>
+      <button class="btn" onclick="calcGrowth()">Посчитать</button>
+      <div class="out" id="gr_out"></div>
+      <p class="muted">CAGR = (End/Start)^(1/n) − 1. Добавим абсолютный/отн. прирост и projected на n+1.</p>
+    </section>
+  </main>
+
+  <section style="max-width:1200px;margin:20px auto 40px;padding:0 16px;color:var(--muted)">
+    <div class="tag">v1.0</div>
+    <p class="muted">⚠️ Упрощённые формулы. Для строгого анализа используйте statsmodels/Scipy или BI‑инструменты; проверьте предпосылки тестов и качество данных.</p>
+  </section>
+
+  <script>
+    const parseNums = (s)=> (s||'').replace(/\n/g,' ').split(/[;,\s]+/).map(Number).filter(v=>!isNaN(v));
+    const mean = a => a.reduce((x,y)=>x+y,0)/a.length;
+    const variance = a => { const m=mean(a); return a.reduce((s,x)=>s+(x-m)*(x-m),0)/(a.length-1); };
+    const sd = a => Math.sqrt(variance(a));
+    const quantile = (arr,q)=>{ const a=[...arr].sort((x,y)=>x-y); const pos=(a.length-1)*q; const base=Math.floor(pos); const rest=pos-base; return a[base]+(a[base+1]-a[base]||0)*rest; }
+
+    function calcDesc(){
+      const vals = parseNums(desc_vals.value);
+      if(!vals.length){ desc_out.innerText='Нет данных'; return; }
+      const n=vals.length, mn=Math.min(...vals), mx=Math.max(...vals);
+      const m=mean(vals), s=sd(vals), med=quantile(vals,0.5);
+      const pcts=(desc_pcts.value||'').split(/;+/).map(x=>parseFloat(x)/100).filter(x=>!isNaN(x)&&x>=0&&x<=1);
+      const qtxt=pcts.map(p=>`${Math.round(p*100)}%=${quantile(vals,p).toFixed(3)}`).join('; ');
+      const q1=quantile(vals,0.25), q3=quantile(vals,0.75), iqr=q3-q1;
+      const trim=parseFloat(desc_trim.value)||0; let tmeanStr='';
+      if(trim>0){
+        const a=[...vals].sort((x,y)=>x-y); const k=Math.floor(a.length*trim/100);
+        const ta=a.slice(k,a.length-k); tmeanStr=`\nTrimmed mean ${trim}%: ${(mean(ta)).toFixed(3)}`;
+      }
+      desc_out.innerText = `n=${n}; min=${mn}; max=${mx}\nmean=${m.toFixed(3)}; median=${med.toFixed(3)}; sd=${s.toFixed(3)}\nQ1=${q1.toFixed(3)}; Q3=${q3.toFixed(3)}; IQR=${iqr.toFixed(3)}${tmeanStr}\n${qtxt}`;
+    }
+
+    function parseSuccTotal(s){ const m=(s+"").match(/(\d+)\s*\/?\s*(\d+)/); if(!m) return null; return {succ:+m[1], total:+m[2]}; }
+
+    function cdfNorm(z){ return 0.5*(1+Math.erf(z/Math.SQRT2)); }
+
+    function calcAB(){
+      const A=parseSuccTotal(a_succ_total.value), B=parseSuccTotal(b_succ_total.value); if(!A||!B) {ab_out.innerText='Неверный формат A/B'; return;}
+      const pA=A.succ/A.total, pB=B.succ/B.total; const diff=pB-pA; const pooled = ab_pooled.value==='1';
+      let se; if(pooled){ const p=(A.succ+B.succ)/(A.total+B.total); se=Math.sqrt(p*(1-p)*(1/A.total+1/B.total)); } else { se=Math.sqrt(pA*(1-pA)/A.total + pB*(1-pB)/B.total); }
+      const z=diff/se; const pval=2*(1-cdfNorm(Math.abs(z)));
+      const z95=1.96; const ciL=diff - z95*se, ciU=diff + z95*se;
+      const sig = pval < (+ab_alpha.value) ? 'значимо' : 'не значимо';
+      ab_out.innerText = `pA=${pA.toFixed(4)} (${A.succ}/${A.total}); pB=${pB.toFixed(4)} (${B.succ}/${B.total})\nΔ=pB−pA=${diff.toFixed(4)}; z=${z.toFixed(3)}; p=${pval.toExponential(2)} → ${sig}\n95% ДИ Δ: [${ciL.toFixed(4)}; ${ciU.toFixed(4)}]`;
+    }
+
+    function calcSS(){
+      const p=+ss_p.value, e=+ss_e.value, z=+ss_conf.value; let n0=(z*z*p*(1-p))/(e*e); const N=+ss_N.value||null; let out=`n₀≈${Math.ceil(n0)}`; if(N){ const n=n0*N/(N+n0-1); out+=` → с поправкой: n≈${Math.ceil(n)}`; } ss_out.innerText=out; }
+
+    function calcCI(){
+      const x=+ci_mean.value, s=+ci_sd.value, n=+ci_n.value, z=+ci_z.value; const m=z*s/Math.sqrt(n); ci_out.innerText=`${(x-m).toFixed(3)} … ${(x+m).toFixed(3)} (±${m.toFixed(3)})`; }
+
+    function calcCorr(){
+      const X=parseNums(corr_x.value), Y=parseNums(corr_y.value); if(X.length!==Y.length||!X.length){ corr_out.innerText='Нужны одинаковые длины X и Y'; return; }
+      const n=X.length; const mx=mean(X), my=mean(Y); let num=0, sx=0, sy=0; for(let i=0;i<n;i++){ const dx=X[i]-mx, dy=Y[i]-my; num+=dx*dy; sx+=dx*dx; sy+=dy*dy; }
+      const r=num/Math.sqrt(sx*sy); const R2=r*r; const t=r*Math.sqrt((n-2)/(1-R2)); // t‑stat
+      function tcdf(t,df){ // приближённо через бетта-функцию? упростим нормальной аппроксимацией для df>30
+        if(df>30){ return cdfNorm(t); }
+        // простая замена: нормальная аппроксимация
+        return cdfNorm(t);
+      }
+      const df=n-2; const p=2*(1-tcdf(Math.abs(t),df));
+      corr_out.innerText = `r=${r.toFixed(4)}; R²=${R2.toFixed(4)}; t=${t.toFixed(3)}; df=${df}; p≈${p.toExponential(2)}`;
+    }
+
+    function calcLinReg(){
+      const lines=(lr_pairs.value||'').trim().split(/\n+/).filter(Boolean); const X=[],Y=[]; for(const ln of lines){ const [x,y]=ln.split(',').map(Number); if(!isNaN(x)&&!isNaN(y)){ X.push(x); Y.push(y);} }
+      if(!X.length){ lr_out.innerText='Нет данных'; return; }
+      const n=X.length; const mx=mean(X), my=mean(Y); let Sxy=0,Sxx=0,Syy=0; for(let i=0;i<n;i++){ const dx=X[i]-mx, dy=Y[i]-my; Sxy+=dx*dy; Sxx+=dx*dx; Syy+=dy*dy; }
+      const b=Sxy/Sxx; const a=my - b*mx; const R2=(Sxy*Sxy)/(Sxx*Syy);
+      const xstar=+lr_xstar.value; const yhat=a+b*xstar;
+      // прогнозный интервал (упрощённо, z‑аппрокс.)
+      const z=+lr_z.value; const syx=Math.sqrt((Syy - b*Sxy)/(n-2)); const se_pred= syx*Math.sqrt(1 + 1/n + (Math.pow(xstar-mx,2)/Sxx));
+      lr_out.innerText = `ŷ = ${a.toFixed(4)} + ${b.toFixed(4)}·x; R²=${R2.toFixed(4)}\nX*=${xstar} → ŷ=${yhat.toFixed(4)}; ${((1-2*(1-cdfNorm(z)))*100).toFixed(0)}% PI: [${(yhat - z*se_pred).toFixed(4)}; ${(yhat + z*se_pred).toFixed(4)}]`;
+    }
+
+    function calcGrowth(){
+      const [s,e]=gr_start_end.value.split(/[→->]+/).map(x=>parseFloat(x.trim())); const n=+gr_n.value; if(!(s>0&&e>0&&n>0)){ gr_out.innerText='Проверь ввод'; return; }
+      const abs=e-s, rel=e/s-1; const cagr=Math.pow(e/s,1/n)-1; const next=e*(1+cagr);
+      gr_out.innerText = `Абс. прирост: ${abs.toFixed(3)}; Отн.: ${(rel*100).toFixed(2)}%\nCAGR≈ ${(cagr*100).toFixed(2)}%/период → прогноз на n+1: ${next.toFixed(3)}`;
+    }
+
+    // авто‑инициализация
+    window.addEventListener('DOMContentLoaded',()=>{calcDesc();calcAB();calcSS();calcCI();calcCorr();calcLinReg();calcGrowth();});
+  </script>
+</body>
+</html>

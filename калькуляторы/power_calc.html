@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Энергетика — набор калькуляторов</title>
+<style>
+  :root{--bg:#0b0c10;--fg:#e8e8e8;--muted:#a3a9b2;--card:#151820;--line:#243040;--accent:#4e9af1}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Arial}
+  .wrap{max-width:1200px;margin:28px auto;padding:0 14px}
+  h1{font-size:1.55rem;margin:6px 0 14px}
+  h3{margin:.2rem 0 .6rem}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:0 6px 24px rgba(0,0,0,.25)}
+  label{display:block;margin-bottom:6px;color:var(--muted)}
+  input,select,button{padding:10px 12px;border:1px solid #2b3240;border-radius:10px;background:#0e1118;color:var(--fg)}
+  input,select{width:100%}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .btn{background:var(--accent);border:0;cursor:pointer}
+  .muted{color:var(--muted)}
+  .mono{font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace}
+  .small{font-size:.9rem}
+  .out p{margin:.35rem 0}
+  details>summary{cursor:pointer}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Калькуляторы для энергетиков (электрика)</h1>
+  <p class="muted" style="margin-top:-6px">Мощность одно/трёхфаз, компенсация cosφ, подбор кабеля и падение напряжения, КЗ на НН трансформатора, подбор трансформатора, стоимость энергии, ИБП, прикидка СЭС. Упрощённые расчёты — проверяйте по вашим нормам (ПУЭ/IEC/СП РК).</p>
+
+  <!-- 0. Общие параметры сети -->
+  <div class="card">
+    <h3>0) Параметры сети</h3>
+    <div class="grid">
+      <div><label>Частота, Гц</label><input id="net_f" type="number" step="any" value="50"></div>
+      <div><label>Однофазное напряжение U<sub>ph</sub>, В</label><input id="net_Uph" type="number" step="any" value="230"></div>
+      <div><label>Трёхфазное линейное U<sub>L</sub>, В</label><input id="net_UL" type="number" step="any" value="400"></div>
+    </div>
+  </div>
+
+  <!-- 1. Мощность одно/трёхфаз -->
+  <div class="card">
+    <h3>1) Мощность: однофаз и трёхфаз</h3>
+    <div class="grid">
+      <div><label>Режим</label><select id="p_mode"><option value="1p">Однофаз</option><option value="3p">Трёхфаз</option></select></div>
+      <div><label>Напряжение (В)</label><input id="p_U" type="number" step="any" value="230"></div>
+      <div><label>Ток I (А)</label><input id="p_I" type="number" step="any" value="10"></div>
+      <div><label>cosφ</label><input id="p_pf" type="number" step="any" value="0.9"></div>
+    </div>
+    <div class="row" style="margin-top:10px"><button class="btn" onclick="calcPower()">Рассчитать</button></div>
+    <div id="p_out" class="out mono" style="margin-top:8px"></div>
+    <p class="small muted">Формулы: 1φ: P=U·I·cosφ, S=U·I, Q=U·I·sinφ. 3φ: P=√3·U<sub>L</sub>·I·cosφ, S=√3·U<sub>L</sub>·I.</p>
+  </div>
+
+  <!-- 2. Компенсация реактивной мощности -->
+  <div class="card">
+    <h3>2) Компенсация cosφ (ёмкость/вар-компенсация)</h3>
+    <div class="grid">
+      <div><label>Активная мощность P, кВт</label><input id="pf_P" type="number" step="any" value="100"></div>
+      <div><label>cosφ исходный</label><input id="pf_old" type="number" step="any" value="0.75"></div>
+      <div><label>cosφ целевой</label><input id="pf_new" type="number" step="any" value="0.95"></div>
+      <div><label>Частота, Гц (для C)</label><input id="pf_f" type="number" step="any" value="50"></div>
+      <div><label>Напряжение конденсаторной ступени, В</label><input id="pf_U" type="number" step="any" value="400"></div>
+    </div>
+    <div class="row" style="margin-top:10px"><button class="btn" onclick="calcPFC()">Рассчитать</button></div>
+    <div id="pf_out" class="out mono" style="margin-top:8px"></div>
+    <p class="small muted">Q<sub>c</sub>=P·(tanφ₁−tanφ₂). Эквивалентная ёмкость (трёхф.) C≈Q<sub>c</sub>/(2πf·U²) на фазу (упрощённо). Подбирайте из стандартных ступеней (kvar).</p>
+  </div>
+
+  <!-- 3. Подбор кабеля и падение напряжения -->
+  <div class="card">
+    <h3>3) Кабель: ток, сечение (грубый) и падение напряжения</h3>
+    <div class="grid">
+      <div><label>Фаза</label><select id="cb_mode"><option value="1p">1φ</option><option value="3p">3φ</option></select></div>
+      <div><label>Материал</label><select id="cb_mat"><option value="cu">Медь</option><option value="al">Алюминий</option></select></div>
+      <div><label>Мощность P, кВт</label><input id="cb_P" type="number" step="any" value="50"></div>
+      <div><label>cosφ</label><input id="cb_pf" type="number" step="any" value="0.9"></div>
+      <div><label>Длина линии L, м (один путь)</label><input id="cb_L" type="number" step="any" value="100"></div>
+      <div><label>Выбранное сечение, мм² (или 0 — авто)</label><input id="cb_S" type="number" step="any" value="0"></div>
+    </div>
+    <div class="row" style="margin-top:10px"><button class="btn" onclick="calcCable()">Рассчитать</button></div>
+    <div id="cb_out" class="out mono" style="margin-top:8px"></div>
+    <details class="small"><summary><b>Принятые таблицы (упрощённо)</b></summary>
+      <p>Токовая нагрузка Cu (≈ при 30 °C, 2–3 жилы): 1.5→18A, 2.5→25A, 4→32A, 6→40A, 10→63A, 16→80A, 25→100A, 35→125A, 50→150A, 70→200A, 95→240A, 120→280A.</p>
+      <p>Сопротивления проводников R′, Ω/км (20 °C): Cu: 1.5→12.1, 2.5→7.41, 4→4.61, 6→3.08, 10→1.83, 16→1.15, 25→0.727, 35→0.524, 50→0.387, 70→0.268, 95→0.193, 120→0.153. Al: 16→1.91, 25→1.20, 35→0.868, 50→0.641, 70→0.443, 95→0.320, 120→0.253.</p>
+    </details>
+  </div>
+
+  <!-- 4. Ток КЗ на НН трансформатора -->
+  <div class="card">
+    <h3>4) Приблизительный ток КЗ на НН трансформатора</h3>
+    <div class="grid">
+      <div><label>Мощность тр-ра S, кВА</label><input id="sc_S" type="number" step="any" value="1000"></div>
+      <div><label>U<sub>L</sub> НН, В</label><input id="sc_U" type="number" step="any" value="400"></div>
+      <div><label>uk%, % (напряжение КЗ тр-ра)</label><input id="sc_uk" type="number" step="any" value="6"></div>
+      <div><label>Доп. импеданс линии (R<sub>км</sub>), Ω (опц.)</label><input id="sc_Zadd" type="number" step="any" value="0"></div>
+    </div>
+    <div class="row" style="margin-top:10px"><button class="btn" onclick="calcSC()">Рассчитать</button></div>
+    <div id="sc_out" class="out mono" style="margin-top:8px"></div>
+    <p class="small muted">I<sub>ном</sub>=S/(√3·U). I<sub>кз</sub>≈ I<sub>ном</sub>·100/uk%. При учёте линии добавьте её импеданс (грубо).</p>
+  </div>
+
+  <!-- 5. Подбор трансформатора -->
+  <div class="card">
+    <h3>5) Подбор трансформатора по нагрузке</h3>
+    <div class="grid">
+      <div><label>Суммарная активная мощность P, кВт</label><input id="tr_P" type="number" step="any" value="500"></div>
+      <div><label>Средний cosφ</label><input id="tr_pf" type="number" step="any" value="0.9"></div>
+      <div><label>Коэф. спроса K<sub>d</sub> (0–1)</label><input id="tr_Kd" type="number" step="any" value="0.8"></div>
+      <div><label>Запас, %</label><input id="tr_margin" type="number" step="any" value="20"></div>
+    </div>
+    <div class="row" style="margin-top:10px"><button class="btn" onclick="calcTransformer()">Рассчитать</button></div>
+    <div id="tr_out" class="out mono" style="margin-top:8px"></div>
+    <p class="small muted">S<sub>тр</sub> ≈ (P·K<sub>d</sub>/cosφ)·(1+запас). Округляйте до ближайшей стандартной мощности.</p>
+  </div>
+
+  <!-- 6. Стоимость энергии и мощностная надбавка -->
+  <div class="card">
+    <h3>6) Стоимость энергии</h3>
+    <div class="grid">
+      <div><label>Потребление, кВт·ч/мес</label><input id="ec_E" type="number" step="any" value="50000"></div>
+      <div><label>Тариф, KZT/кВт·ч</label><input id="ec_tar" type="number" step="any" value="25"></div>
+      <div><label>Макс. спрос, кВт (опц.)</label><input id="ec_peak" type="number" step="any" value="0"></div>
+      <div><label>Плата за мощность, KZT/кВт (опц.)</label><input id="ec_dem" type="number" step="any" value="0"></div>
+    </div>
+    <div class="row" style="margin-top:10px"><button class="btn" onclick="calcEnergyCost()">Рассчитать</button></div>
+    <div id="ec_out" class="out mono" style="margin-top:8px"></div>
+  </div>
+
+  <!-- 7. ИБП / АКБ — оценка времени работы -->
+  <div class="card">
+    <h3>7) ИБП/АКБ: оценка времени работы</h3>
+    <div class="grid">
+      <div><label>Нагрузка P<sub>load</sub>, Вт</label><input id="ups_P" type="number" step="any" value="1000"></div>
+      <div><label>Число АКБ n</label><input id="ups_n" type="number" step="any" value="4"></div>
+      <div><label>Напряжение АКБ, В</label><input id="ups_V" type="number" step="any" value="12"></div>
+      <div><label>Ёмкость одной АКБ, А·ч</label><input id="ups_Ah" type="number" step="any" value="100"></div>
+      <div><label>КПД ИБП η</label><input id="ups_eta" type="number" step="any" value="0.85"></div>
+      <div><label>Глубина разряда DoD (0–1)</label><input id="ups_dod" type="number" step="any" value="0.8"></div>
+    </div>
+    <div class="row" style="margin-top:10px"><button class="btn" onclick="calcUPS()">Рассчитать</button></div>
+    <div id="ups_out" class="out mono" style="margin-top:8px"></div>
+  </div>
+
+  <!-- 8. СЭС ориентировочно -->
+  <div class="card">
+    <h3>8) Солнечная электростанция: прикидка мощности и АКБ</h3>
+    <div class="grid">
+      <div><label>Суточное потребление, кВт·ч</label><input id="pv_Eday" type="number" step="any" value="50"></div>
+      <div><label>Пиковые солнечные часы PSH, ч/сут</label><input id="pv_PSH" type="number" step="any" value="4.5"></div>
+      <div><label>КПД системы η (0–1)</label><input id="pv_eta" type="number" step="any" value="0.75"></div>
+      <div><label>Дни автономии, сутки</label><input id="pv_aut" type="number" step="any" value="1"></div>
+      <div><label>Рабочее напряжение АКБ, В</label><input id="pv_V" type="number" step="any" value="48"></div>
+      <div><label>Глубина разряда DoD (0–1)</label><input id="pv_dod" type="number" step="any" value="0.8"></div>
+    </div>
+    <div class="row" style="margin-top:10px"><button class="btn" onclick="calcPV()">Рассчитать</button></div>
+    <div id="pv_out" class="out mono" style="margin-top:8px"></div>
+  </div>
+</div>
+
+<script>
+function fmt(x,d=3){ if(!Number.isFinite(x)) return '—'; const a=Math.abs(x); if(a!==0&&(a<1e-4||a>=1e6)) return x.toExponential(6); return x.toLocaleString('ru-RU',{maximumFractionDigits:d}); }
+
+// 1) Power
+function calcPower(){
+  const mode=document.getElementById('p_mode').value; const U=+document.getElementById('p_U').value||0; const I=+document.getElementById('p_I').value||0; const pf=+document.getElementById('p_pf').value||0;
+  const k = (mode==='3p') ? Math.sqrt(3) : 1;
+  const S = k*U*I; const P=S*pf; const Q=Math.sqrt(Math.max(0,S*S-P*P));
+  document.getElementById('p_out').innerHTML=`S = ${fmt(S/1000,3)} кВА\nP = ${fmt(P/1000,3)} кВт\nQ = ${fmt(Q/1000,3)} квар`;
+}
+
+// 2) PFC
+function calcPFC(){
+  const PkW=+document.getElementById('pf_P').value||0; const pf1=+document.getElementById('pf_old').value||0; const pf2=+document.getElementById('pf_new').value||0; const f=+document.getElementById('pf_f').value||50; const U=+document.getElementById('pf_U').value||400;
+  const phi1=Math.acos(Math.min(1,Math.max(0,pf1))); const phi2=Math.acos(Math.min(1,Math.max(0,pf2)));
+  const Qc_kvar = PkW*(Math.tan(phi1)-Math.tan(phi2));
+  const C_per_phase_uF = (Qc_kvar*1000) / (2*Math.PI*f*U*U) * 1e6 / 3; // на фазу, мкФ, упрощение
+  document.getElementById('pf_out').innerHTML=`Qc ≈ ${fmt(Qc_kvar,2)} квар\nЭкв. ёмкость (на фазу) ≈ ${fmt(C_per_phase_uF,0)} мкФ`;
+}
+
+// 3) Cable sizing & voltage drop
+const cuAmp = {1.5:18,2.5:25,4:32,6:40,10:63,16:80,25:100,35:125,50:150,70:200,95:240,120:280};
+const cuR = {1.5:12.1,2.5:7.41,4:4.61,6:3.08,10:1.83,16:1.15,25:0.727,35:0.524,50:0.387,70:0.268,95:0.193,120:0.153};
+const alR = {16:1.91,25:1.20,35:0.868,50:0.641,70:0.443,95:0.320,120:0.253};
+function pickSection(I, mat){
+  const table = (mat==='cu')? cuAmp : {16:75,25:100,35:125,50:150,70:190,95:230,120:260};
+  let best=null; for(const S of Object.keys(table).map(Number).sort((a,b)=>a-b)){ if(table[S]>=I){ best=S; break; } }
+  return best || Math.max(...Object.keys(table).map(Number));
+}
+function calcCable(){
+  const mode=document.getElementById('cb_mode').value; const mat=document.getElementById('cb_mat').value; const PkW=+document.getElementById('cb_P').value||0; const pf=+document.getElementById('cb_pf').value||0.9; const L=+document.getElementById('cb_L').value||0; let S=+document.getElementById('cb_S').value||0;
+  const Uph=+document.getElementById('net_Uph').value||230; const UL=+document.getElementById('net_UL').value||400;
+  const U = (mode==='3p')? UL : Uph;
+  const I = (mode==='3p')? (PkW*1000)/(Math.sqrt(3)*U*pf) : (PkW*1000)/(U*pf);
+  if(!S){ S=pickSection(I, mat); }
+  const Rtab = (mat==='cu')? cuR : alR; const Rkm = Rtab[S];
+  if(!Rkm){ document.getElementById('cb_out').textContent=`Сечение ${S} мм² недоступно для ${mat.toUpperCase()}`; return; }
+  // Падение напряжения: 1φ ≈ 2·L·I·R′/1000; 3φ ≈ √3·L·I·R′/1000 (без X)
+  const dU = (mode==='3p')? Math.sqrt(3)*L*I*Rkm/1000 : 2*L*I*Rkm/1000; // В
+  const dU_pct = dU/U*100;
+  document.getElementById('cb_out').innerHTML=`Ток I ≈ ${fmt(I,2)} А\nРекомендуемое сечение ≈ ${S} мм² (${mat.toUpperCase()})\nΔU ≈ ${fmt(dU,2)} В  ( ${fmt(dU_pct,2)}% )`;
+}
+
+// 4) Short-circuit current
+function calcSC(){
+  const S=+document.getElementById('sc_S').value||0; const U=+document.getElementById('sc_U').value||400; const uk=+document.getElementById('sc_uk').value||6; const Zadd=+document.getElementById('sc_Zadd').value||0;
+  const Inom = (S*1000)/(Math.sqrt(3)*U);
+  let Ik = Inom*100/uk; // идеальный на клеммах тр-ра
+  if(Zadd>0){ // грубая корректировка
+    const Ztr = (U/Math.sqrt(3)) / Ik; // фазное экв. импеданс
+    const Ztot = Ztr + Zadd; Ik = (U/Math.sqrt(3)) / Ztot; }
+  document.getElementById('sc_out').innerHTML=`Iном ≈ ${fmt(Inom,1)} А\nIкз (на НН) ≈ ${fmt(Ik,1)} А`;
+}
+
+// 5) Transformer sizing
+function calcTransformer(){
+  const P=+document.getElementById('tr_P').value||0; const pf=+document.getElementById('tr_pf').value||0.9; const Kd=Math.min(1,Math.max(0,+document.getElementById('tr_Kd').value||0.8)); const margin=+document.getElementById('tr_margin').value||20;
+  const Str = (P*Kd/pf)*(1+margin/100); // кВА
+  // ближайшие стандартные (пример): 100,160,250,400,630,1000,1250,1600,2000 кВА
+  const std=[100,160,250,400,630,1000,1250,1600,2000,2500,3150];
+  let pick=std[std.length-1]; for(const s of std){ if(s>=Str){ pick=s; break; } }
+  document.getElementById('tr_out').innerHTML=`Sтр расчётная ≈ ${fmt(Str,1)} кВА\nРекомендуемый типоразмер ≈ ${pick} кВА`;
+}
+
+// 6) Energy cost
+function calcEnergyCost(){
+  const E=+document.getElementById('ec_E').value||0; const t=+document.getElementById('ec_tar').value||0; const Ppk=+document.getElementById('ec_peak').value||0; const dem=+document.getElementById('ec_dem').value||0;
+  const costE = E*t; const costDem = Ppk*dem; const total=costE+costDem;
+  document.getElementById('ec_out').innerHTML=`Энергия: ${fmt(costE,0)} KZT\nМощность: ${fmt(costDem,0)} KZT\nИтого: ${fmt(total,0)} KZT/мес`;
+}
+
+// 7) UPS runtime
+function calcUPS(){
+  const P=+document.getElementById('ups_P').value||0; const n=+document.getElementById('ups_n').value||0; const V=+document.getElementById('ups_V').value||12; const Ah=+document.getElementById('ups_Ah').value||0; const eta=+document.getElementById('ups_eta').value||0.85; const dod=+document.getElementById('ups_dod').value||0.8;
+  const Wh = n*V*Ah*dod*eta; // доступная энергия
+  const hours = Wh / P; const min = hours*60;
+  document.getElementById('ups_out').innerHTML=`Доступно ≈ ${fmt(Wh,0)} Вт·ч\nВремя ≈ ${fmt(hours,2)} ч  (≈ ${fmt(min,0)} мин)`;
+}
+
+// 8) PV sizing
+function calcPV(){
+  const Eday=+document.getElementById('pv_Eday').value||0; const PSH=+document.getElementById('pv_PSH').value||4; const eta=+document.getElementById('pv_eta').value||0.75; const aut=+document.getElementById('pv_aut').value||1; const V=+document.getElementById('pv_V').value||48; const dod=+document.getElementById('pv_dod').value||0.8;
+  const Parray_kW = Eday/(PSH*eta); // кВт
+  const Batt_Wh = Eday*aut*1000/eta; const Batt_Ah = Batt_Wh/(V*dod);
+  document.getElementById('pv_out').innerHTML=`Массив СЭС ≈ ${fmt(Parray_kW,2)} кВт\nАКБ ≈ ${fmt(Batt_Ah,0)} А·ч при ${V} В (DoD=${dod})`;
+}
+</script>
+</body>
+</html>

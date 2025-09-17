@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Калькулятор для LLM‑инженера — быстрые прикидки</title>
+  <style>
+    :root{--bg:#0f172a;--card:#111827;--muted:#94a3b8;--acc:#22d3ee;--ok:#22c55e;--warn:#f59e0b;--bad:#ef4444}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,Segoe UI,Inter,Roboto,Arial,sans-serif;background:linear-gradient(180deg,#0b1022,#0f172a);color:#e5e7eb}
+    header{padding:24px 16px;text-align:center}
+    header h1{margin:0;font-size:28px}
+    header p{margin:8px 0 0;color:var(--muted)}
+    .container{max-width:1200px;margin:0 auto;padding:16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:16px}
+    .card{background:rgba(17,24,39,.85);backdrop-filter:saturate(140%) blur(6px);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:16px;box-shadow:0 10px 24px rgba(0,0,0,.35)}
+    .card h2{margin:0 0 10px;font-size:18px}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:8px 0}
+    .row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:8px 0}
+    label{font-size:12px;color:var(--muted)}
+    input,select,textarea{width:100%;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.08);background:#0b1220;color:#e5e7eb;outline:none}
+    input:focus,select:focus,textarea:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(34,211,238,.15)}
+    .btn{display:inline-block;margin-top:8px;padding:8px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.12);cursor:pointer;background:#0b1220;color:#e5e7eb}
+    .btn:hover{border-color:var(--acc)}
+    .out{margin-top:10px;padding:10px;border-radius:12px;background:#0b1220;border:1px dashed rgba(255,255,255,.08);font-variant-numeric:tabular-nums;white-space:pre-line}
+    .muted{color:var(--muted);font-size:12px}
+    .tag{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.12);font-size:12px;color:#cbd5e1}
+    .ok{color:var(--ok)}.warn{color:var(--warn)}.bad{color:var(--bad)}
+    .mono{font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Калькулятор для LLM‑инженера</h1>
+    <p>Токены/стоимость · Контекст/подгон · RAG‑чанкование и эмбеддинги · Хранилище вектора · Пропускная и латентность · Кэш промптов</p>
+  </header>
+
+  <main class="container">
+    <!-- 1) Базовая стоимость запроса -->
+    <section class="card" id="pricing">
+      <h2>Стоимость запроса (prompt + response)</h2>
+      <div class="row">
+        <div>
+          <label>Токены в промпте</label>
+          <input type="number" id="p_in" value="1500" step="1">
+        </div>
+        <div>
+          <label>Токены в ответе</label>
+          <input type="number" id="p_out" value="800" step="1">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Цена ввода, $ за 1К токенов</label>
+          <input type="number" id="price_in" value="0.005" step="0.001">
+        </div>
+        <div>
+          <label>Цена вывода, $ за 1К токенов</label>
+          <input type="number" id="price_out" value="0.015" step="0.001">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Кэш промптов: доля кэшируемого префикса, %</label>
+          <input type="number" id="cache_prefix_pct" value="60" step="1">
+        </div>
+        <div>
+          <label>Hit‑rate кэша, %</label>
+          <input type="number" id="cache_hit_pct" value="70" step="1">
+        </div>
+      </div>
+      <button class="btn" onclick="calcCost()">Рассчитать</button>
+      <div class="out" id="price_out_div"></div>
+      <p class="muted">Кэш экономит вводимые токены: эффективные токены ввода = prompt×(1 − prefix×hit).</p>
+    </section>
+
+    <!-- 2) Контекст и подгон текста -->
+    <section class="card" id="fit">
+      <h2>Контекст и вместимость</h2>
+      <div class="row">
+        <div>
+          <label>Контекст окна, токенов</label>
+          <input type="number" id="ctx" value="128000" step="1024">
+        </div>
+        <div>
+          <label>Токенов оставить под ответ</label>
+          <input type="number" id="ctx_reserve" value="4000" step="100">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Входной текст, символов</label>
+          <input type="number" id="chars" value="200000" step="100">
+        </div>
+        <div>
+          <label>Оценка: 1 токен ≈ N символов</label>
+          <input type="number" id="tok_per_char" value="4" step="0.1">
+        </div>
+      </div>
+      <button class="btn" onclick="calcFit()">Проверить</button>
+      <div class="out" id="fit_out"></div>
+      <p class="muted">Грубая оценка: 1 токен ≈ 3–4 символа латиницы; для кириллицы иногда 2–3.</p>
+    </section>
+
+    <!-- 3) RAG: чанки, эмбеддинги и стоимость -->
+    <section class="card" id="rag">
+      <h2>RAG: чанкование и стоимость эмбеддингов</h2>
+      <div class="row">
+        <div>
+          <label>Объём корпуса, символов</label>
+          <input type="number" id="corpus_chars" value="1000000" step="1000">
+        </div>
+        <div>
+          <label>1 токен ≈ N символов</label>
+          <input type="number" id="rag_tok_per_char" value="4" step="0.1">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Размер чанка, токенов</label>
+          <input type="number" id="chunk_t" value="512" step="32">
+        </div>
+        <div>
+          <label>Перекрытие, токенов</label>
+          <input type="number" id="overlap_t" value="64" step="8">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Цена эмбеддингов, $/1К ток.</label>
+          <input type="number" id="embed_price" value="0.0001" step="0.0001">
+        </div>
+        <div>
+          <label>Размер эмбеддинга, dim</label>
+          <input type="number" id="embed_dim" value="1536" step="1">
+        </div>
+      </div>
+      <button class="btn" onclick="calcRAG()">Рассчитать</button>
+      <div class="out" id="rag_out"></div>
+      <p class="muted">Число чанков ≈ ⌈(Tокены − overlap)/(chunk − overlap)⌉. Стоимость — за токены эмбеддинга.</p>
+    </section>
+
+    <!-- 4) Векторное хранилище: объём -->
+    <section class="card" id="vec">
+      <h2>Хранилище эмбеддингов</h2>
+      <div class="row">
+        <div>
+          <label>Векторов (чанков)</label>
+          <input type="number" id="vec_n" value="10000" step="1">
+        </div>
+        <div>
+          <label>Размерность, dim</label>
+          <input type="number" id="vec_dim" value="1536" step="1">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Тип float</label>
+          <select id="vec_dtype">
+            <option value="4" selected>float32 (4 байта)</option>
+            <option value="2">float16 (2 байта)</option>
+            <option value="1">int8/quant (1 байт)</option>
+          </select>
+        </div>
+        <div>
+          <label>Оверхед индекса, %</label>
+          <input type="number" id="vec_ovh" value="30" step="1">
+        </div>
+      </div>
+      <button class="btn" onclick="calcVec()">Оценить объём</button>
+      <div class="out" id="vec_out"></div>
+      <p class="muted">Объём ≈ N·dim·байт/элемент · (1 + оверхед). Добавьте метаданные документов.</p>
+    </section>
+
+    <!-- 5) Пропускная и латентность -->
+    <section class="card" id="thru">
+      <h2>Пропускная (QPS) и латентность</h2>
+      <div class="row">
+        <div>
+          <label>Средний ввод/вывод, ток.</label>
+          <input type="text" id="tt_io" value="1500/800" class="mono">
+        </div>
+        <div>
+          <label>Скорость генерации, ток/с</label>
+          <input type="number" id="tt_tps" value="50" step="1">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Конкурентных потоков (конн.)</label>
+          <input type="number" id="tt_conc" value="20" step="1">
+        </div>
+        <div>
+          <label>Накладные (RAG/тулы), с</label>
+          <input type="number" id="tt_ovh" value="0.6" step="0.1">
+        </div>
+      </div>
+      <button class="btn" onclick="calcThru()">Посчитать</button>
+      <div class="out" id="thru_out"></div>
+      <p class="muted">t≈(tokens_out / ток/с) + сетевые/инфра‑оверхеды. Теоретич. QPS≈конкурентность / t.</p>
+    </section>
+
+    <!-- 6) Стоимость трафика при нагрузке -->
+    <section class="card" id="traffic">
+      <h2>Стоимость при нагрузке</h2>
+      <div class="row">
+        <div>
+          <label>Запросов в минуту</label>
+          <input type="number" id="tpm" value="120" step="1">
+        </div>
+        <div>
+          <label>Часы работы в день</label>
+          <input type="number" id="hours" value="16" step="1">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Цена ввода, $/1К ток.</label>
+          <input type="number" id="traf_pin" value="0.005" step="0.001">
+        </div>
+        <div>
+          <label>Цена вывода, $/1К ток.</label>
+          <input type="number" id="traf_pout" value="0.015" step="0.001">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Средн. ввод/вывод, ток.</label>
+          <input type="text" id="traf_io" value="1500/800" class="mono">
+        </div>
+        <div>
+          <label>Дней в месяце</label>
+          <input type="number" id="days" value="30" step="1">
+        </div>
+      </div>
+      <button class="btn" onclick="calcTraffic()">Рассчитать OPEX</button>
+      <div class="out" id="traf_out"></div>
+      <p class="muted">Берём средние токены на запрос и умножаем на поток. Добавьте эмбеддинги и хостинг RAG.</p>
+    </section>
+  </main>
+
+  <section style="max-width:1200px;margin:20px auto 40px;padding:0 16px;color:var(--muted)">
+    <div class="tag">v1.0</div>
+    <p class="muted">⚠️ Прикидочные формулы. Реальные цены/скорости зависят от провайдера и модели; подставьте свои значения.
+    Можно добавить: множественные тулкалы, ранжирование kNN, rerank стоимость, guardrails, SxS‑оценки.</p>
+  </section>
+
+  <script>
+    const fmt=(v,d=2)=>Number(v).toFixed(d);
+
+    // 1) Стоимость запроса
+    function calcCost(){
+      const tIn=+p_in.value, tOut=+p_out.value; const cin=+price_in.value, cout=+price_out.value;
+      const pref=(+cache_prefix_pct.value)/100, hit=(+cache_hit_pct.value)/100;
+      const effIn = tIn * (1 - pref*hit);
+      const cost = (effIn/1000)*cin + (tOut/1000)*cout;
+      const saved = (tIn-effIn)/1000*cin;
+      price_out_div.innerText = `Эффективные токены ввода: ${Math.round(effIn)}\nСтоимость запроса: $${fmt(cost,4)}\nЭкономия от кэша: ~$${fmt(saved,4)} за запрос`;
+    }
+
+    // 2) Контекст/вместимость
+    function calcFit(){
+      const ctx=+document.getElementById('ctx').value; const res=+ctx_reserve.value; const chars=+document.getElementById('chars').value; const cPerTok=+tok_per_char.value;
+      const tokensIn = Math.ceil(chars / cPerTok);
+      const maxPrompt = ctx - res;
+      const ok = tokensIn <= maxPrompt; const cls = ok? 'ok':'bad';
+      fit_out.innerHTML = `Оценка токенов входа: <b>${tokensIn}</b>\nДоступно под промпт: <b>${maxPrompt}</b>\nСтатус: <b class="${cls}">${ok?'ПОМЕЩАЕТСЯ':'НЕ ПОМЕЩАЕТСЯ'}</b>`;
+    }
+
+    // 3) RAG чанки/эмбеддинги
+    function calcRAG(){
+      const chars=+corpus_chars.value; const per=+rag_tok_per_char.value; const chunk=+chunk_t.value; const ov=+overlap_t.value; const price=+embed_price.value; const dim=+embed_dim.value;
+      const totalTok = Math.ceil(chars/per);
+      const step = Math.max(1, chunk - ov);
+      const nChunks = Math.max(1, Math.ceil((totalTok - ov)/step));
+      const cost = (totalTok/1000)*price;
+      rag_out.innerText = `Токенов в корпусе ≈ ${totalTok}\nЧанков: ≈ ${nChunks} (размер ${chunk} ток., overlap ${ov})\nСтоимость эмбеддинга корпуса: ~$${fmt(cost,4)}\nПодсказка: 1 вектор dim=${dim} с float32 ≈ ${(dim*4/1024).toFixed(2)} КБ`;
+      // автозаполнить блок векторов
+      vec_n.value = nChunks; vec_dim.value = dim;
+    }
+
+    // 4) Векторное хранилище
+    function calcVec(){
+      const N=+vec_n.value, dim=+vec_dim.value, bytes=+vec_dtype.value; const ovh=1+(+vec_ovh.value)/100;
+      const rawBytes = N*dim*bytes; const totalBytes = rawBytes*ovh; const GB = totalBytes/1024/1024/1024;
+      vec_out.innerText = `Сырые данные: ${(rawBytes/1024/1024).toFixed(2)} МБ\nС учётом оверхеда: ${GB.toFixed(2)} ГБ`;
+    }
+
+    // 5) Пропускная и латентность
+    function parseIO(s){ const m=(s+"").match(/(\d+)\s*\/\s*(\d+)/); return m?{pin:+m[1], pout:+m[2]}:{pin:0,pout:0}; }
+    function calcThru(){
+      const io=parseIO(tt_io.value); const tps=+tt_tps.value; const conc=+tt_conc.value; const ovh=+tt_ovh.value;
+      const genTime = io.pout / tps; // с
+      const t = genTime + ovh; // общая латентность запроса
+      const qps = conc / t;
+      thru_out.innerText = `Латентность ≈ ${fmt(t,2)} с (генерация ${fmt(genTime,2)} с + оверхед ${ovh} с)\nQPS ≈ ${fmt(qps,2)} при конкурентности ${conc}`;
+    }
+
+    // 6) Стоимость при нагрузке
+    function calcTraffic(){
+      const rpm=+tpm.value; const hrs=+hours.value; const days=+days.value; const pin=+traf_pin.value; const pout=+traf_pout.value; const io=parseIO(traf_io.value);
+      const reqPerDay = rpm*60*hrs; const reqPerMonth = reqPerDay*days;
+      const costPerReq = (io.pin/1000)*pin + (io.pout/1000)*pout;
+      const monthly = costPerReq * reqPerMonth;
+      traf_out.innerText = `Стоимость запроса: ~$${fmt(costPerReq,4)}\nМесячный OPEX (≈${reqPerMonth} запросов): ~$${fmt(monthly,2)}`;
+    }
+
+    // авто‑инициализация
+    window.addEventListener('DOMContentLoaded',()=>{calcCost();calcFit();calcRAG();calcVec();calcThru();calcTraffic();});
+  </script>
+</body>
+</html>

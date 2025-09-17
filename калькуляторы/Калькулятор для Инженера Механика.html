@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Калькуляторы для инженеров‑механиков</title>
+  <style>
+    :root{
+      --bg:#0b0f14; --card:#121821; --ink:#e6eef7; --muted:#a6b3c3; --acc:#d877ff; --ring:rgba(216,119,255,.35); --danger:#ff6b6b;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial}
+    .wrap{max-width:1200px;margin:0 auto;padding:24px}
+    h1{font-size:clamp(20px,3vw,32px);margin:0 0 12px}
+    p.lead{color:var(--muted);margin:0 0 20px}
+    .toolbar{position:sticky;top:0;z-index:30;background:linear-gradient(180deg,rgba(11,15,20,.95),rgba(11,15,20,.85));border-bottom:1px solid #1b2533;backdrop-filter:blur(6px)}
+    .toolbar .wrap{display:flex;gap:8px;flex-wrap:wrap}
+    .btn{display:inline-flex;gap:6px;align-items:center;padding:9px 12px;border-radius:12px;border:1px solid #1f2a3b;background:#0f1722;color:var(--ink);text-decoration:none;cursor:pointer}
+    .btn:hover{border-color:#2b3b56}
+    .btn.primary{background:linear-gradient(180deg,#e0a7ff,#ba57ff);color:#2b083d;border-color:#9d3acc}
+    .card{background:var(--card);border:1px solid #1b2533;border-radius:16px;padding:16px;box-shadow:0 6px 18px rgba(0,0,0,.25);margin:16px 0}
+    .card h2{margin:0 0 6px;font-size:18px}
+    .badge{font-size:12px;padding:4px 8px;border:1px solid #273349;border-radius:999px;color:#cbdcf5;display:inline-block;margin:4px 6px 10px 0}
+    .field{display:flex;gap:10px;align-items:center;margin:10px 0}
+    .field label{min-width:200px;color:var(--muted)}
+    .field input{flex:1;background:#0e141c;color:var(--ink);border:1px solid #243043;border-radius:10px;padding:10px 12px;outline:none}
+    .field input:focus{border-color:var(--acc);box-shadow:0 0 0 4px var(--ring)}
+    .out{background:#0c1119;border:1px dashed #243043;padding:12px;border-radius:12px;color:#dbe8f7;font-family:ui-monospace,consolas,monaco,monospace}
+    .note{font-size:12px;color:#8fa0b6}
+    .err{color:var(--danger);font-weight:600}
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <div class="wrap">
+      <a class="btn" href="#shaft">Вал: крутящий момент и мощность</a>
+      <a class="btn" href="#beam">Балка: изгибающий момент</a>
+      <a class="btn" href="#bolt">Болтовое соединение</a>
+      <a class="btn" href="#bearing">Срок службы подшипника</a>
+      <a class="btn" href="#gear">Передаточное число</a>
+    </div>
+  </div>
+  <div class="wrap">
+    <h1>Калькуляторы для инженеров‑механиков</h1>
+    <p class="lead">Быстрые инженерные расчёты: валы, балки, болтовые соединения, подшипники и передачи.</p>
+
+    <div id="shaft" class="card">
+      <h2>Вал: мощность ⇄ крутящий момент</h2>
+      <span class="badge">M = 9550·P/n (Н·м)</span>
+      <div class="field"><label>Мощность P, кВт</label><input id="sh_P" type="number" value="15"></div>
+      <div class="field"><label>Частота вращения n, об/мин</label><input id="sh_n" type="number" value="1500"></div>
+      <div><button class="btn primary" onclick="calcShaft()">Рассчитать</button></div>
+      <div id="outShaft" class="out">—</div>
+    </div>
+
+    <div id="beam" class="card">
+      <h2>Балка: изгибающий момент (простой случай)</h2>
+      <span class="badge">M_max = q·L²/8</span>
+      <div class="field"><label>Распределённая нагрузка q, кН/м</label><input id="bm_q" type="number" value="5"></div>
+      <div class="field"><label>Пролёт L, м</label><input id="bm_L" type="number" value="6"></div>
+      <div><button class="btn primary" onclick="calcBeam()">Рассчитать</button></div>
+      <div id="outBeam" class="out">—</div>
+    </div>
+
+    <div id="bolt" class="card">
+      <h2>Болтовое соединение (на срез)</h2>
+      <span class="badge">τ = F / (n·A)</span>
+      <div class="field"><label>Сила F, кН</label><input id="bl_F" type="number" value="40"></div>
+      <div class="field"><label>Диаметр болта d, мм</label><input id="bl_d" type="number" value="16"></div>
+      <div class="field"><label>Количество болтов n</label><input id="bl_n" type="number" value="4"></div>
+      <div><button class="btn primary" onclick="calcBolt()">Рассчитать</button></div>
+      <div id="outBolt" class="out">—</div>
+      <div class="note">Результат: касательные напряжения τ (МПа). Сравнивайте с допускаемыми для материала болтов.</div>
+    </div>
+
+    <div id="bearing" class="card">
+      <h2>Подшипник: номинальный срок службы</h2>
+      <span class="badge">L10 = (C/P)^p · 10^6 оборотов</span>
+      <div class="field"><label>Динамическая грузоподъёмность C, кН</label><input id="br_C" type="number" value="25"></div>
+      <div class="field"><label>Эквивалентная нагрузка P, кН</label><input id="br_P" type="number" value="10"></div>
+      <div class="field"><label>Показатель степени p (3 для ШСП, 10/3 для роликовых)</label><input id="br_p" type="number" step="0.01" value="3"></div>
+      <div class="field"><label>Частота вращения n, об/мин</label><input id="br_n" type="number" value="600"></div>
+      <div><button class="btn primary" onclick="calcBearing()">Рассчитать</button></div>
+      <div id="outBearing" class="out">—</div>
+      <div class="note">L10 выводится в часах работы при заданной частоте вращения.</div>
+    </div>
+
+    <div id="gear" class="card">
+      <h2>Передаточное число зубчатой передачи</h2>
+      <span class="badge">i = z2 / z1</span>
+      <div class="field"><label>Число зубьев ведущей шестерни z1</label><input id="gr_z1" type="number" value="20"></div>
+      <div class="field"><label>Число зубьев ведомого колеса z2</label><input id="gr_z2" type="number" value="60"></div>
+      <div><button class="btn primary" onclick="calcGear()">Рассчитать</button></div>
+      <div id="outGear" class="out">—</div>
+    </div>
+
+    <div class="card">
+      <h2>Как добавить ссылку</h2>
+      <div class="out"><code>&lt;a class="btn" href="calculators_mech.html" target="_blank"&gt;Калькуляторы для инженеров‑механиков&lt;/a&gt;</code></div>
+    </div>
+  </div>
+<script>
+  const fmt=(x,d=2)=>isFinite(x)?Number(x).toLocaleString('ru-RU',{maximumFractionDigits:d}):'—';
+  const val=id=>parseFloat(document.getElementById(id).value);
+  const out=(id,html)=>document.getElementById(id).innerHTML=html;
+
+  function calcShaft(){const P=val('sh_P'),n=val('sh_n');if(P<=0||n<=0){out('outShaft','<span class="err">Введите P,n >0</span>');return;}const M=9550*P/n;out('outShaft',`Крутящий момент ≈ <b>${fmt(M,1)} Н·м</b>`)}
+  function calcBeam(){const q=val('bm_q'),L=val('bm_L');if(q<=0||L<=0){out('outBeam','<span class="err">Введите q,L >0</span>');return;}const M=q*L*L/8;out('outBeam',`M_max ≈ <b>${fmt(M,1)} кН·м</b>`)}
+  function calcBolt(){const F=val('bl_F')*1000,d=val('bl_d')/1000,n=val('bl_n');if(F<=0||d<=0||n<=0){out('outBolt','<span class="err">Проверьте ввод</span>');return;}const A=Math.PI*d*d/4;const tau=F/(n*A)/1e6;out('outBolt',`Напряжение ≈ <b>${fmt(tau,2)} МПа</b>`)}
+  function calcBearing(){const C=val('br_C'),P=val('br_P'),p=val('br_p'),n=val('br_n');if(C<=0||P<=0||p<=0||n<=0){out('outBearing','<span class="err">Проверьте ввод</span>');return;}const L10=Math.pow(C/P,p)*1e6;const hours=L10/(60*n);out('outBearing',`L10 ≈ <b>${fmt(L10,0)} об</b> ≈ <b>${fmt(hours,0)} ч</b>`)}
+  function calcGear(){const z1=val('gr_z1'),z2=val('gr_z2');if(z1<=0||z2<=0){out('outGear','<span class="err">Введите z1,z2 >0</span>');return;}const i=z2/z1;out('outGear',`Передаточное число i = <b>${fmt(i,2)}</b>`)}
+</script>
+</body>
+</html>

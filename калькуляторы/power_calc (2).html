@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Электрик — полевые калькуляторы</title>
+<style>
+  :root{--bg:#0b0c10;--fg:#e8e8e8;--muted:#a3a9b2;--card:#151820;--line:#243040;--accent:#4e9af1}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Arial}
+  .wrap{max-width:1200px;margin:28px auto;padding:0 14px}
+  h1{font-size:1.55rem;margin:6px 0 14px}
+  h3{margin:.2rem 0 .6rem}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:0 6px 24px rgba(0,0,0,.25)}
+  label{display:block;margin-bottom:6px;color:var(--muted)}
+  input,select,button{padding:10px 12px;border:1px solid #2b3240;border-radius:10px;background:#0e1118;color:var(--fg)}
+  input,select{width:100%}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .btn{background:var(--accent);border:0;cursor:pointer}
+  .muted{color:var(--muted)}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  .small{font-size:.9rem}
+  .out p{margin:.35rem 0}
+  details>summary{cursor:pointer}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Калькуляторы для электриков (полевые)</h1>
+  <p class="muted" style="margin-top:-6px">Падение напряжения, выбор автомата, допустимый ток кабеля с поправками, заполнение трубы/лотка, быстрый расчёт освещения, балансировка фаз. Упрощённые прикидки — сверяйтесь с ПУЭ/IEC и паспортами оборудования.</p>
+
+  <!-- 0. Параметры сети -->
+  <div class="card">
+    <h3>0) Параметры сети</h3>
+    <div class="grid">
+      <div><label>Частота, Гц</label><input id="net_f" type="number" value="50"></div>
+      <div><label>U<sub>1φ</sub>, В</label><input id="net_U1" type="number" value="230"></div>
+      <div><label>U<sub>3φ</sub> (линейное), В</label><input id="net_U3" type="number" value="400"></div>
+      <div><label>Допустимое падение ΔU<sub>max</sub>, %</label><input id="net_du" type="number" value="5"></div>
+    </div>
+  </div>
+
+  <!-- 1. Падение напряжения -->
+  <div class="card">
+    <h3>1) Падение напряжения (DC/1φ/3φ)</h3>
+    <div class="grid">
+      <div><label>Режим</label><select id="vd_mode"><option value="dc">DC</option><option value="1p">1φ</option><option value="3p">3φ</option></select></div>
+      <div><label>Материал</label><select id="vd_mat"><option value="cu">Медь</option><option value="al">Алюминий</option></select></div>
+      <div><label>Сечение, мм²</label><input id="vd_S" type="number" value="6"></div>
+      <div><label>Длина одного пути L, м</label><input id="vd_L" type="number" value="50"></div>
+      <div><label>Ток I, А</label><input id="vd_I" type="number" value="20"></div>
+      <div><label>cosφ (для AC)</label><input id="vd_pf" type="number" value="0.9"></div>
+      <div><label>Автоподбор сечения под ΔU<sub>max</sub></label><select id="vd_autos"><option value="off">Выключено</option><option value="on">Включено</option></select></div>
+    </div>
+    <div class="row" style="margin-top:10px"><button class="btn" onclick="calcVD()">Рассчитать</button></div>
+    <div id="vd_out" class="out mono" style="margin-top:8px"></div>
+    <p class="small muted">Формулы (без учёта X): DC/1φ: ΔU≈2·L·I·R′/1000; 3φ: ΔU≈√3·L·I·R′/1000. % от номинального U.</p>
+  </div>
+
+  <!-- 2. Выбор автомата и проверка КЗ -->
+  <div class="card">
+    <h3>2) Автомат + проверка срабатывания по КЗ</h3>
+    <div class="grid">
+      <div><label>Расчётный ток нагрузки I<sub>b</sub>, А</label><input id="mc_Ib" type="number" value="32"></div>
+      <div><label>Предполагаемый ток КЗ I<sub>k</sub>, кА</label><input id="mc_Ik" type="number" value="3"></div>
+      <div><label>Кривая</label><select id="mc_curve"><option value="B">B</option><option value="C">C</option><option value="D">D</option></select></div>
+      <div><label>Выбранный номинал автомата, А (0 — авто)</label><input id="mc_In" type="number" value="0"></div>
+      <div><label>Допустимый ток кабеля I<sub>z</sub>, А</label><input id="mc_Iz" type="number" value="40"></div>
+    </div>
+    <div class="row" style="margin-top:10px"><button class="btn" onclick="pickMCB()">Проверить</button></div>
+    <div id="mc_out" class="out mono" style="margin-top:8px"></div>
+    <p class="small muted">Магнитный расцепитель: B≈3–5·In, C≈5–10·In, D≈10–20·In. Проверяем: I<sub>b</sub>≤In≤I<sub>z</sub> и I<sub>k</sub>≥k·In.</p>
+  </div>
+
+  <!-- 3. Допустимый ток кабеля с поправками -->
+  <div class="card">
+    <h3>3) Допустимый ток кабеля (таблица + поправки)</h3>
+    <div class="grid">
+      <div><label>Материал</label><select id="amp_mat"><option value="cu">Cu</option><option value="al">Al</option></select></div>
+      <div><label>Сечение, мм²</label><input id="amp_S" type="number" value="10"></div>
+      <div><label>Температура окружающей, °C</label><input id="amp_T" type="number" value="30"></div>
+      <div><label>Коэф. группировки (0.3–1)</label><input id="amp_g" type="number" value="0.8"></div>
+    </div>
+    <div class="row" style="margin-top:10px"><button class="btn" onclick="calcAmpacity()">Рассчитать</button></div>
+    <div id="amp_out" class="out mono" style="margin-top:8px"></div>
+    <details class="small"><summary><b>Базовые значения (ориентировочно)</b></summary>
+      <p>Cu (многожильный, 2–3 жилы, в воздухе, ~30 °C): 1.5→18A, 2.5→25A, 4→32A, 6→40A, 10→63A, 16→80A, 25→100A, 35→125A, 50→150A, 70→200A, 95→240A, 120→280A.</p>
+      <p>Al (ориент.): 16→75A, 25→100A, 35→125A, 50→150A, 70→190A, 95→230A, 120→260A.</p>
+    </details>
+  </div>
+
+  <!-- 4. Заполнение трубы/лотка -->
+  <div class="card">
+    <h3>4) Заполнение трубы/лотка</h3>
+    <div class="grid">
+      <div><label>Тип канала</label><select id="cf_type"><option value="conduit">Труба (круг)</option><option value="tray">Лоток (прямоуг.)</option></select></div>
+      <div><label>Размер канала: диаметр или AxB, мм</label><input id="cf_size" type="text" placeholder="напр. 25 или 200x50"></div>
+      <div><label>Диаметр кабеля, мм</label><input id="cf_d" type="number" value="8"></div>
+      <div><label>Количество кабелей, шт</label><input id="cf_n" type="number" value="12"></div>
+      <div><label>Допустимая заполненность, %</label><input id="cf_lim" type="number" value="40"></div>
+    </div>
+    <div class="row" style="margin-top:10px"><button class="btn" onclick="calcFill()">Рассчитать</button></div>
+    <div id="cf_out" class="out mono" style="margin-top:8px"></div>
+    <p class="small muted">Для труб часто принимают ≤40% при более чем двух кабелях. Для лотков — по проектным требованиям и нормам производителя.</p>
+  </div>
+
+  <!-- 5. Быстрый расчёт освещения (лумен-метод) -->
+  <div class="card">
+    <h3>5) Освещение: оценка количества светильников</h3>
+    <div class="grid">
+      <div><label>Длина × ширина, м</label><input id="lx_LW" type="text" value="10x6"></div>
+      <div><label>Требуемая освещённость, лк</label><input id="lx_E" type="number" value="300"></div>
+      <div><label>Световой поток одного, лм</label><input id="lx_F" type="number" value="4000"></div>
+      <div><label>CU (коэф. использования)</label><input id="lx_CU" type="number" value="0.6"></div>
+      <div><label>MF (коэф. запаса)</label><input id="lx_MF" type="number" value="0.8"></div>
+    </div>
+    <div class="row" style="margin-top:10px"><button class="btn" onclick="calcLighting()">Рассчитать</button></div>
+    <div id="lx_out" class="out mono" style="margin-top:8px"></div>
+  </div>
+
+  <!-- 6. Балансировка фаз -->
+  <div class="card">
+    <h3>6) Балансировка фаз по токам</h3>
+    <div class="grid">
+      <div><label>Список токов по цепям (А), через запятую</label><input id="ph_list" type="text" value="16,10,8,6,4,12,20"></div>
+      <div><label>Начальное распределение (A,B,C), через «|»</label><input id="ph_init" type="text" placeholder="напр. 16,8|10,6|4,12,20"></div>
+    </div>
+    <div class="row" style="margin-top:10px"><button class="btn" onclick="balancePhases()">Сбалансировать</button></div>
+    <div id="ph_out" class="out mono" style="margin-top:8px"></div>
+    <p class="small muted">Жадный алгоритм: сортировка по убыванию и поочерёдное добавление в фазу с минимальной суммой.</p>
+  </div>
+</div>
+
+<script>
+function fmt(x,d=3){ if(!Number.isFinite(x)) return '—'; const a=Math.abs(x); if(a!==0&&(a<1e-4||a>=1e6)) return x.toExponential(6); return x.toLocaleString('ru-RU',{maximumFractionDigits:d}); }
+
+// 1) Voltage drop
+const RperKm_Cu = {1.5:12.1,2.5:7.41,4:4.61,6:3.08,10:1.83,16:1.15,25:0.727,35:0.524,50:0.387,70:0.268,95:0.193,120:0.153,150:0.124,185:0.0991,240:0.0754};
+const RperKm_Al = {16:1.91,25:1.20,35:0.868,50:0.641,70:0.443,95:0.320,120:0.253,150:0.206,185:0.164,240:0.125};
+const stdSections = [1.5,2.5,4,6,10,16,25,35,50,70,95,120,150,185,240];
+function rPerKm(mat,S){ const t=(mat==='cu')?RperKm_Cu:RperKm_Al; // берём ближайшее из таблицы
+  if (t[S]) return t[S]; let closest=null; for(const s of Object.keys(t).map(Number).sort((a,b)=>a-b)){ if(s>=S){ closest=s; break; } } return t[closest]||NaN; }
+function calcVD(){
+  const mode=document.getElementById('vd_mode').value; const mat=document.getElementById('vd_mat').value; let S=+document.getElementById('vd_S').value||0; const L=+document.getElementById('vd_L').value||0; const I=+document.getElementById('vd_I').value||0; const pf=+document.getElementById('vd_pf').value||1; const auto=document.getElementById('vd_autos').value==='on';
+  const U1=+document.getElementById('net_U1').value||230; const U3=+document.getElementById('net_U3').value||400; const DUmax=+document.getElementById('net_du').value||5;
+  const U = (mode==='3p')? U3 : U1; if(!S||auto){ S=pickSectionByVD(mode,mat,L,I,pf,U,DUmax); document.getElementById('vd_S').value=S; }
+  const Rkm = rPerKm(mat,S); if(!Number.isFinite(Rkm)){ document.getElementById('vd_out').textContent='Нет данных по сопротивлению для выбранного сечения'; return; }
+  const factor = (mode==='3p')? Math.sqrt(3) : 2; // DC и 1ф используем 2L
+  const dU = (mode==='3p')? (Math.sqrt(3)*L*I*Rkm/1000) : (2*L*I*Rkm/1000); // В
+  const dU_pct = dU/U*100*(mode==='dc'? (U?1:1):1); // для DC предполагаем U из U1
+  const Uend = U - dU;
+  const ok = dU_pct<=DUmax ? 'OK' : 'ПРЕВЫШЕНО';
+  document.getElementById('vd_out').innerHTML=`Сечение S = ${S} мм² (${mat.toUpperCase()})\nΔU ≈ ${fmt(dU,2)} В  (${fmt(dU_pct,2)}%) → Uкон ≈ ${fmt(Uend,1)} В  → ${ok}`;
+}
+function pickSectionByVD(mode,mat,L,I,pf,U,DUmax){
+  for(const S of stdSections){ const Rkm=rPerKm(mat,S); if(!Number.isFinite(Rkm)) continue; const dU=(mode==='3p')? (Math.sqrt(3)*L*I*Rkm/1000) : (2*L*I*Rkm/1000); const pct=dU/U*100; if(pct<=DUmax) return S; } return stdSections[stdSections.length-1]; }
+
+// 2) MCB selection
+function pickMCB(){
+  const Ib=+document.getElementById('mc_Ib').value||0; const Ik=+document.getElementById('mc_Ik').value||0; const curve=document.getElementById('mc_curve').value; let In=+document.getElementById('mc_In').value||0; const Iz=+document.getElementById('mc_Iz').value||0;
+  const std=[6,10,13,16,20,25,32,40,50,63,80,100,125]; if(!In){ In=std.find(x=>x>=Ib) || std[std.length-1]; document.getElementById('mc_In').value=In; }
+  const k = (curve==='B')?3 : (curve==='C'?5:10); // нижняя граница магнитного
+  const cond1 = Ib<=In; const cond2 = In<=Iz; const cond3 = (Ik*1000) >= (k*In); // Ik кА → А
+  const verdict = (cond1&&cond2&&cond3)? 'OK' : 'НЕ ПРОХОДИТ';
+  document.getElementById('mc_out').innerHTML=`In = ${In} A, кривая ${curve}\nПроверка: Ib≤In (${cond1?'OK':'нет'}), In≤Iz (${cond2?'OK':'нет'}), Ik≥${k}·In (${cond3?'OK':'нет'}) → ${verdict}`;
+}
+
+// 3) Ampacity with derating
+function baseAmp(mat,S){
+  const cu={1.5:18,2.5:25,4:32,6:40,10:63,16:80,25:100,35:125,50:150,70:200,95:240,120:280};
+  const al={16:75,25:100,35:125,50:150,70:190,95:230,120:260};
+  const t=(mat==='cu')?cu:al; if(t[S]) return t[S]; let c=null; for(const s of Object.keys(t).map(Number).sort((a,b)=>a-b)){ if(s>=S){ c=s; break; } } return t[c]||0;
+}
+function tempFactor(T){ // грубая аппрокс. для 70–90°C изоляций
+  if(T<=25) return 1.08; if(T<=30) return 1.0; if(T<=35) return 0.94; if(T<=40) return 0.87; if(T<=45) return 0.79; if(T<=50) return 0.71; if(T<=55) return 0.61; if(T<=60) return 0.5; return 0.45;
+}
+function calcAmpacity(){
+  const mat=document.getElementById('amp_mat').value; const S=+document.getElementById('amp_S').value||0; const T=+document.getElementById('amp_T').value||30; const g=+document.getElementById('amp_g').value||1;
+  const Ibase=baseAmp(mat,S); const kt=tempFactor(T); const Iz=Ibase*kt*g;
+  document.getElementById('amp_out').innerHTML=`I<sub>base</sub> ≈ ${fmt(Ibase,0)} А → с поправками Iz ≈ ${fmt(Iz,0)} А (kt=${fmt(kt,2)}, kg=${fmt(g,2)})`;
+}
+
+// 4) Conduit/tray fill
+function parseAxB(s){ const m=s.toLowerCase().replace(/\s/g,'').match(/(\d+(?:\.\d+)?)x(\d+(?:\.\d+)?)/); return m?{a:+m[1],b:+m[2]}:null; }
+function calcFill(){
+  const type=document.getElementById('cf_type').value; const size=document.getElementById('cf_size').value.trim(); const d=+document.getElementById('cf_d').value||0; const n=+document.getElementById('cf_n').value||0; const lim=+document.getElementById('cf_lim').value||40;
+  let A_channel=0; if(type==='conduit'){ const D=+size; A_channel=Math.PI*(D*D)/4; } else { const ab=parseAxB(size); if(!ab){ document.getElementById('cf_out').textContent='Размер лотка AxB'; return;} A_channel=ab.a*ab.b; }
+  const A_cables = n*Math.PI*(d*d)/4; const pct = A_cables/A_channel*100;
+  const ok = pct<=lim ? 'OK' : 'ПРЕВЫШЕНО';
+  document.getElementById('cf_out').innerHTML=`Заполнение ≈ ${fmt(pct,1)}% (лимит ${lim}% ) → ${ok}`;
+}
+
+// 5) Lighting
+function calcLighting(){
+  const LW=document.getElementById('lx_LW').value.trim(); const m=LW.toLowerCase().replace(/\s/g,'').match(/(\d+(?:\.\d+)?)x(\d+(?:\.\d+)?)/); if(!m){ document.getElementById('lx_out').textContent='Формат LxW'; return; }
+  const L=+m[1], W=+m[2]; const E=+document.getElementById('lx_E').value||0; const F=+document.getElementById('lx_F').value||0; const CU=+document.getElementById('lx_CU').value||1; const MF=+document.getElementById('lx_MF').value||1;
+  const A=L*W; const N=Math.ceil(E*A/(F*CU*MF));
+  document.getElementById('lx_out').innerHTML=`Площадь A=${fmt(A,2)} м² → требуется ≈ ${N} светильников`;
+}
+
+// 6) Phase balance
+function balancePhases(){
+  const list=document.getElementById('ph_list').value.split(',').map(s=>+s.trim()).filter(x=>x>0).sort((a,b)=>b-a);
+  let bins=[[0,[]],[0,[]],[0,[]]]; // [sum,[items]] for A,B,C
+  for(const x of list){ bins.sort((a,b)=>a[0]-b[0]); bins[0][0]+=x; bins[0][1].push(x); }
+  const [A,B,C]=bins.map(b=>b[0]); const max=Math.max(A,B,C), min=Math.min(A,B,C); const unb = (max-min)/( (A+B+C)/3 )*100;
+  const repr = ['A','B','C'].map((p,i)=>`${p}: ${fmt(bins[i][0],2)} А ← [${bins[i][1].join(', ')}]`).join('\n');
+  document.getElementById('ph_out').textContent = `${repr}\nНебаланс ≈ ${fmt(unb,1)}%`;
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Калькуляторы для технолога</title>
+  <style>
+    :root{
+      --bg:#0b0f14; --card:#121821; --ink:#e6eef7; --muted:#a6b3c3; --acc:#27c2a0; --danger:#ff6b6b;
+      --ring: rgba(39,194,160,.35);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0; font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial; background:var(--bg); color:var(--ink)}
+    .wrap{max-width:1200px; margin:0 auto; padding:24px}
+    h1{font-size:clamp(20px,3vw,32px); margin:0 0 16px 0}
+    p.lead{color:var(--muted); margin-top:0}
+
+    .grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:16px}
+    .card{background:var(--card); border:1px solid #1b2431; border-radius:16px; padding:16px; box-shadow:0 6px 20px rgba(0,0,0,.25)}
+    .card h2{font-size:18px; margin:0 0 8px}
+    .field{display:flex; gap:10px; align-items:center; margin:10px 0}
+    .field label{min-width:140px; color:var(--muted)}
+    .field input, .field select{flex:1; background:#0e141c; color:var(--ink); border:1px solid #243043; border-radius:10px; padding:10px 12px; outline:none}
+    .field input:focus, .field select:focus{border-color:var(--acc); box-shadow:0 0 0 4px var(--ring)}
+
+    .btn{display:inline-flex; gap:8px; align-items:center; padding:10px 14px; border-radius:12px; border:1px solid #1f2a3b; background:#0f1722; color:var(--ink); cursor:pointer; text-decoration:none}
+    .btn:hover{border-color:#2b3b56}
+    .btn.primary{background:linear-gradient(180deg,#1fd2a6,#0fa386); border-color:#0c8c71; color:#07261f}
+
+    .out{background:#0c1119; border:1px dashed #243043; padding:12px; border-radius:12px; color:#dbe8f7; font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}
+    .muted{color:var(--muted)}
+    .row{display:flex; gap:8px; flex-wrap:wrap}
+    .badge{font-size:12px; padding:4px 8px; border:1px solid #273349; border-radius:999px; color:#bcd}
+    .note{font-size:12px; color:#8fa0b6}
+    .err{color:var(--danger); font-weight:600}
+
+    .toolbar{display:flex; gap:8px; flex-wrap:wrap; margin:8px 0 20px}
+    .toolbar .btn{background:#101827}
+    .sticky{position:sticky; top:0; background:linear-gradient(180deg, rgba(11,15,20,.95), rgba(11,15,20,.85)); backdrop-filter: blur(6px); padding:8px 0; z-index:30; border-bottom:1px solid #1b2431}
+    .section{scroll-margin-top:80px}
+  </style>
+</head>
+<body>
+  <div class="sticky">
+    <div class="wrap toolbar">
+      <a class="btn" href="#dilution">Разбавление / смешение</a>
+      <a class="btn" href="#mix2">Смешение двух потоков</a>
+      <a class="btn" href="#heat">Тепловая нагрузка и пар</a>
+      <a class="btn" href="#cooling">Охлаждающая вода</a>
+      <a class="btn" href="#rt">Время пребывания</a>
+      <a class="btn" href="#pump">Мощность насоса</a>
+      <a class="btn" href="#pipe">Потери давления в трубе</a>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <h1>Калькуляторы для технолога</h1>
+    <p class="lead">Точные инженерные расчёты без лишнего клика. Все формулы указаны прямо в карточках. Единицы — SI (метрические). Десятичный разделитель — точка.</p>
+
+    <!-- DILUTION / MIX -->
+    <div id="dilution" class="card section">
+      <h2>Разбавление до целевой концентрации</h2>
+      <div class="row">
+        <span class="badge">Формула: V_add = V₀·(C₀/C_t − 1), если разбавитель 0%</span>
+      </div>
+      <div class="field"><label>Исходная конц. C₀, %</label><input id="c0" type="number" step="0.0001" value="25"></div>
+      <div class="field"><label>Исходный объём V₀, L</label><input id="v0" type="number" step="0.01" value="100"></div>
+      <div class="field"><label>Целевая конц. C_t, %</label><input id="ct" type="number" step="0.0001" value="10"></div>
+      <div class="row">
+        <button class="btn primary" onclick="calcDilution()">Рассчитать</button>
+      </div>
+      <div id="outDil" class="out">—</div>
+      <div class="note">Если разбавитель имеет собственную концентрацию C_add, используйте ниже «Смешение двух потоков».</div>
+    </div>
+
+    <!-- MIX 2 STREAMS -->
+    <div id="mix2" class="card section">
+      <h2>Смешение двух потоков (массовый баланс)</h2>
+      <div class="row">
+        <span class="badge">Формулы: C_mix = (C₁·Q₁ + C₂·Q₂)/(Q₁+Q₂)</span>
+        <span class="badge">Q_mix = Q₁ + Q₂</span>
+      </div>
+      <div class="field"><label>C₁, %</label><input id="m_c1" type="number" step="0.0001" value="20"></div>
+      <div class="field"><label>Q₁, L/h</label><input id="m_q1" type="number" step="0.001" value="500"></div>
+      <div class="field"><label>C₂, %</label><input id="m_c2" type="number" step="0.0001" value="5"></div>
+      <div class="field"><label>Q₂, L/h</label><input id="m_q2" type="number" step="0.001" value="300"></div>
+      <div class="row"><button class="btn primary" onclick="calcMix2()">Рассчитать</button></div>
+      <div id="outMix2" class="out">—</div>
+    </div>
+
+    <!-- HEAT DUTY & STEAM -->
+    <div id="heat" class="card section">
+      <h2>Тепловая нагрузка и расход пара</h2>
+      <div class="row">
+        <span class="badge">Q = m·c_p·ΔT</span>
+        <span class="badge">m_steam = Q̇·3600 / h_fg</span>
+      </div>
+      <div class="field"><label>Массовый расход m, kg/h</label><input id="h_m" type="number" step="0.001" value="1000"></div>
+      <div class="field"><label>c_p, kJ/(kg·K)</label><input id="h_cp" type="number" step="0.001" value="4.186"></div>
+      <div class="field"><label>ΔT, °C</label><input id="h_dT" type="number" step="0.01" value="20"></div>
+      <div class="field"><label>Латентная теплота пара h_fg, kJ/kg</label><input id="h_hfg" type="number" step="1" value="2257"></div>
+      <div class="row"><button class="btn primary" onclick="calcHeat()">Рассчитать</button></div>
+      <div id="outHeat" class="out">—</div>
+      <div class="note">Результаты: тепловая нагрузка в kW и kJ/h; оценка расхода насыщенного пара (при заданном h_fg).</div>
+    </div>
+
+    <!-- COOLING WATER -->
+    <div id="cooling" class="card section">
+      <h2>Потребность в охлаждающей воде</h2>
+      <div class="row">
+        <span class="badge">ṁ_w = Q̇·3600 / (c_p·ΔT)</span>
+      </div>
+      <div class="field"><label>Тепловая нагрузка Q̇, kW</label><input id="cw_QkW" type="number" step="0.01" value="100"></div>
+      <div class="field"><label>ΔT воды, °C</label><input id="cw_dT" type="number" step="0.1" value="8"></div>
+      <div class="field"><label>c_p воды, kJ/(kg·K)</label><input id="cw_cp" type="number" step="0.001" value="4.186"></div>
+      <div class="row"><button class="btn primary" onclick="calcCooling()">Рассчитать</button></div>
+      <div id="outCW" class="out">—</div>
+    </div>
+
+    <!-- RESIDENCE TIME -->
+    <div id="rt" class="card section">
+      <h2>Время пребывания в аппарате</h2>
+      <div class="row">
+        <span class="badge">τ = V / Q</span>
+      </div>
+      <div class="field"><label>Объём V, m³</label><input id="rt_V" type="number" step="0.0001" value="5"></div>
+      <div class="field"><label>Расход Q, m³/h</label><input id="rt_Q" type="number" step="0.0001" value="10"></div>
+      <div class="row"><button class="btn primary" onclick="calcRT()">Рассчитать</button></div>
+      <div id="outRT" class="out">—</div>
+    </div>
+
+    <!-- PUMP POWER -->
+    <div id="pump" class="card section">
+      <h2>Мощность насоса</h2>
+      <div class="row">
+        <span class="badge">P = ρ·g·Q·H / η</span>
+        <span class="badge">Q (m³/h) → m³/s делим на 3600</span>
+      </div>
+      <div class="field"><label>Расход Q, m³/h</label><input id="p_Q" type="number" step="0.001" value="30"></div>
+      <div class="field"><label>Напор H, m</label><input id="p_H" type="number" step="0.01" value="40"></div>
+      <div class="field"><label>Плотность ρ, kg/m³</label><input id="p_rho" type="number" step="0.1" value="1000"></div>
+      <div class="field"><label>КПД η (0..1)</label><input id="p_eta" type="number" step="0.01" value="0.7"></div>
+      <div class="row"><button class="btn primary" onclick="calcPump()">Рассчитать</button></div>
+      <div id="outPump" class="out">—</div>
+      <div class="note">Итоговая мощность — на валу насоса (кВт). Для электродвигателя учтите КПД двигателя дополнительно.</div>
+    </div>
+
+    <!-- PIPE PRESSURE DROP -->
+    <div id="pipe" class="card section">
+      <h2>Потери давления в трубе (Darcy–Weisbach)</h2>
+      <div class="row">
+        <span class="badge">ΔP = f·(L/D)·(ρ·v²/2)</span>
+        <span class="badge">f = 64/Re (ламинарный), Swamee–Jain при турбулентном</span>
+      </div>
+      <div class="field"><label>Длина L, m</label><input id="pp_L" type="number" step="0.01" value="100"></div>
+      <div class="field"><label>Внутр. диаметр D, mm</label><input id="pp_Dmm" type="number" step="0.01" value="50"></div>
+      <div class="field"><label>Шероховатость ε, mm</label><input id="pp_epsmm" type="number" step="0.0001" value="0.045"></div>
+      <div class="field"><label>Расход Q, m³/h</label><input id="pp_Q" type="number" step="0.001" value="20"></div>
+      <div class="field"><label>Плотность ρ, kg/m³</label><input id="pp_rho" type="number" step="0.1" value="1000"></div>
+      <div class="field"><label>Динамическая вязк. μ, mPa·s</label><input id="pp_mu_mPas" type="number" step="0.001" value="1"></div>
+      <div class="row"><button class="btn primary" onclick="calcPipe()">Рассчитать</button></div>
+      <div id="outPipe" class="out">—</div>
+      <div class="note">Эквивалентные местные сопротивления (отводы, задвижки) можно приблизительно учесть добавлением эквивалентной длины к L.</div>
+    </div>
+
+    <div class="card">
+      <h2>Как добавить ссылку-кнопку на эту страницу</h2>
+      <div class="out">
+        <code>&lt;a class="btn" href="calculators_technologist.html" target="_blank" rel="noopener"&gt;Калькуляторы для технолога&lt;/a&gt;</code>
+      </div>
+    </div>
+
+  </div>
+
+<script>
+  // === Общие утилиты ===
+  const g = 9.80665;
+  const fmt = (x, d=4) => {
+    if (!isFinite(x)) return '—';
+    return Number(x).toLocaleString('ru-RU', {maximumFractionDigits:d});
+  };
+  const val = id => parseFloat(document.getElementById(id).value);
+  const setOut = (id, html) => document.getElementById(id).innerHTML = html;
+
+  // 1) Разбавление до целевой концентрации
+  function calcDilution(){
+    const C0 = val('c0');
+    const V0 = val('v0');
+    const Ct = val('ct');
+    if (Ct<=0 || C0<=0 || V0<=0){ setOut('outDil', '<span class="err">Проверьте ввод (Ct, C0, V0 &gt; 0)</span>'); return; }
+    if (Ct >= C0){
+      const msg = Ct===C0 ? 'Разбавление не требуется: целевая концентрация равна исходной.' : 'Целевая концентрация выше исходной — разбавление водой/растворителем не даст нужного результата.';
+      setOut('outDil', msg);
+      return;
+    }
+    const Vadd = V0 * (C0/Ct - 1); // L
+    const Vtot = V0 + Vadd;
+    setOut('outDil', `Добавить разбавителя: <b>${fmt(Vadd,3)} L</b><br>Итоговый объём: <b>${fmt(Vtot,3)} L</b>`);
+  }
+
+  // 2) Смешение двух потоков
+  function calcMix2(){
+    const C1 = val('m_c1')/100, C2 = val('m_c2')/100;
+    const Q1 = val('m_q1'), Q2 = val('m_q2');
+    if (Q1<0||Q2<0){ setOut('outMix2','<span class="err">Расходы должны быть ≥ 0</span>'); return; }
+    const Qt = Q1+Q2;
+    if (Qt===0){ setOut('outMix2','Нет потока'); return; }
+    const Cmix = (C1*Q1 + C2*Q2)/Qt*100; // %
+    setOut('outMix2', `Смесь: <b>${fmt(Cmix,3)} %</b><br>Суммарный расход: <b>${fmt(Qt,3)} L/h</b>`);
+  }
+
+  // 3) Тепловая нагрузка и пар
+  function calcHeat(){
+    const m = val('h_m'); // kg/h
+    const cp = val('h_cp'); // kJ/kgK
+    const dT = val('h_dT');
+    const hfg = val('h_hfg'); // kJ/kg
+    if (m<=0||cp<=0||hfg<=0){ setOut('outHeat','<span class="err">Проверьте ввод</span>'); return; }
+    const Q_kJ_per_h = m*cp*dT; // kJ/h
+    const Q_kW = Q_kJ_per_h/3600; // kW
+    const mSteam = Q_kJ_per_h / hfg; // kg/h
+    setOut('outHeat', `Q̇ = <b>${fmt(Q_kW,3)} kW</b> (<span class="muted">${fmt(Q_kJ_per_h,0)} kJ/h</span>)<br>Расход пара ≈ <b>${fmt(mSteam,2)} kg/h</b>`);
+  }
+
+  // 4) Охлаждающая вода
+  function calcCooling(){
+    const QkW = val('cw_QkW');
+    const dT = val('cw_dT');
+    const cp = val('cw_cp');
+    if (QkW<=0||dT<=0||cp<=0){ setOut('outCW','<span class="err">Проверьте ввод</span>'); return; }
+    const m_w = QkW*3600/(cp*dT); // kg/h (≈ L/h для воды)
+    const m_w_m3h = m_w/1000; // m3/h (для воды)
+    setOut('outCW', `Необходимый расход воды: <b>${fmt(m_w,0)} kg/h</b> ≈ <b>${fmt(m_w_m3h,3)} m³/h</b>`);
+  }
+
+  // 5) Время пребывания
+  function calcRT(){
+    const V = val('rt_V'); // m3
+    const Q = val('rt_Q'); // m3/h
+    if (V<=0||Q<=0){ setOut('outRT','<span class="err">V и Q должны быть &gt; 0</span>'); return; }
+    const tau_h = V/Q;
+    const tau_min = tau_h*60;
+    setOut('outRT', `τ = <b>${fmt(tau_h,4)} ч</b> (${fmt(tau_min,1)} мин)`);
+  }
+
+  // 6) Мощность насоса
+  function calcPump(){
+    const Q_m3h = val('p_Q');
+    const H = val('p_H');
+    const rho = val('p_rho');
+    const eta = val('p_eta');
+    if (Q_m3h<=0||H<0||rho<=0||eta<=0||eta>1){ setOut('outPump','<span class="err">Проверьте ввод (η в диапазоне 0..1)</span>'); return; }
+    const Q_m3s = Q_m3h/3600;
+    const P_W = rho*g*Q_m3s*H/eta;
+    const P_kW = P_W/1000;
+    setOut('outPump', `P ≈ <b>${fmt(P_kW,3)} kW</b>`);
+  }
+
+  // 7) Потери давления в трубе
+  function calcPipe(){
+    const L = val('pp_L');
+    const Dmm = val('pp_Dmm');
+    const epsmm = val('pp_epsmm');
+    const Q_m3h = val('pp_Q');
+    const rho = val('pp_rho');
+    const mu_mPas = val('pp_mu_mPas');
+    if (L<=0||Dmm<=0||Q_m3h<0||rho<=0||mu_mPas<=0){ setOut('outPipe','<span class="err">Проверьте ввод</span>'); return; }
+
+    const D = Dmm/1000; // m
+    const eps = epsmm/1000; // m
+    const Q = Q_m3h/3600; // m3/s
+    const A = Math.PI*D*D/4;
+    const v = Q/A; // m/s
+    const mu = mu_mPas/1000; // Pa·s (1 mPa·s = 0.001 Pa·s)
+    const Re = rho*v*D/mu;
+
+    let f;
+    if (Re < 2300){
+      f = 64/Re;
+    } else {
+      // Swamee–Jain explicit approximation
+      const term = (eps/(3.7*D)) + (5.74/Math.pow(Re,0.9));
+      f = 0.25/Math.pow(Math.log10(term),2);
+    }
+    const dP = f*(L/D)*(rho*v*v/2); // Pa
+    const dP_bar = dP/1e5;
+    const dP_kPa = dP/1000;
+
+    setOut('outPipe', `Re = <b>${fmt(Re,0)}</b>; f = <b>${fmt(f,4)}</b><br>ΔP ≈ <b>${fmt(dP_kPa,2)} kPa</b> (<span class="muted">${fmt(dP_bar,3)} bar</span>)<br>Скорость v = <b>${fmt(v,3)} m/s</b>`);
+  }
+</script>
+</body>
+</html>

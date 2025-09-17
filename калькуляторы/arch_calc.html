@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Архитектор — мини‑калькуляторы</title>
+<style>
+  :root{--bg:#0b0c10;--fg:#e8e8e8;--muted:#a3a9b2;--card:#151820;--line:#243040;--accent:#4e9af1}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Arial}
+  .wrap{max-width:1100px;margin:28px auto;padding:0 14px}
+  h1{font-size:1.45rem;margin:6px 0 14px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:0 6px 24px rgba(0,0,0,.25)}
+  label{display:block;margin-bottom:6px;color:var(--muted)}
+  input,select,button{padding:10px 12px;border:1px solid #2b3240;border-radius:10px;background:#0e1118;color:var(--fg)}
+  input,select{width:100%}
+  .btn{background:var(--accent);border:0;cursor:pointer}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .mono{font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace}
+  .muted{color:var(--muted)}
+  .out p{margin:.35rem 0}
+  .cards{display:grid;grid-template-columns:1fr;gap:12px}
+  details>summary{cursor:pointer}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Расчёты для архитекторов — мини‑набор</h1>
+  <p class="muted" style="margin-top:-6px">Набор быстрых калькуляторов: помещение, лестницы (правило Блондэля), пандусы, остекление, объёмы материалов, уклон кровли.</p>
+
+  <div class="cards">
+    <!-- 1. Помещение: площадь/периметр/площадь стен -->
+    <div class="card">
+      <h3>1) Помещение: площадь, периметр, площадь стен</h3>
+      <div class="grid">
+        <div><label>Длина, м</label><input id="room_L" type="number" step="any" value="6"></div>
+        <div><label>Ширина, м</label><input id="room_W" type="number" step="any" value="4"></div>
+        <div><label>Высота, м</label><input id="room_H" type="number" step="any" value="2.8"></div>
+        <div><label>Площадь проёмов (окна+двери), м²</label><input id="room_openings" type="number" step="any" value="2.5"></div>
+      </div>
+      <div class="row" style="margin-top:10px"><button class="btn" onclick="calcRoom()">Рассчитать</button></div>
+      <div id="room_out" class="out mono" style="margin-top:8px"></div>
+    </div>
+
+    <!-- 2. Лестница по Блондэлю -->
+    <div class="card">
+      <h3>2) Лестница (правило Блондэля 2R+T≈630±30 мм)</h3>
+      <div class="grid">
+        <div><label>Чистовая высота этажа H, мм</label><input id="st_H" type="number" step="any" value="3000"></div>
+        <div><label>Предпочитаемый подступенок R, мм (обычно 150–180)</label><input id="st_R" type="number" step="any" value="170"></div>
+        <div><label>Предпочитаемый проступь T, мм (обычно 260–300)</label><input id="st_T" type="number" step="any" value="280"></div>
+        <div><label>Макс. длина марша, м (для проверки)</label><input id="st_Lmax" type="number" step="any" value="5.0"></div>
+      </div>
+      <div class="row" style="margin-top:10px"><button class="btn" onclick="calcStair()">Рассчитать</button></div>
+      <div id="st_out" class="out mono" style="margin-top:8px"></div>
+      <p class="muted small">Примечание: нормы зависят от страны/сводов правил. Проверяйте требования вашего СП/СНиП/IBC/EN.</p>
+    </div>
+
+    <!-- 3. Пандус -->
+    <div class="card">
+      <h3>3) Пандус (уклон, длина, площадки)</h3>
+      <div class="grid">
+        <div><label>Перепад высот Δh, мм</label><input id="rp_h" type="number" step="any" value="600"></div>
+        <div><label>Целевой уклон, %</label><input id="rp_slope" type="number" step="any" value="8"></div>
+        <div><label>Доп. горизонтальные площадки (м) на каждые N метров</label><input id="rp_landing_each" type="number" step="any" value="6"></div>
+        <div><label>Длина площадки, м</label><input id="rp_landing_len" type="number" step="any" value="1.5"></div>
+      </div>
+      <div class="row" style="margin-top:10px"><button class="btn" onclick="calcRamp()">Рассчитать</button></div>
+      <div id="rp_out" class="out mono" style="margin-top:8px"></div>
+      <p class="muted small">Подставьте допустимый уклон и шаг площадок по вашим нормам (часто 5–8% уклон, площадка каждые 6 м).</p>
+    </div>
+
+    <!-- 4. Остекление и WFR -->
+    <div class="card">
+      <h3>4) Остекление: доля остекления и ориентировочный WFR</h3>
+      <div class="grid">
+        <div><label>Площадь помещения, м²</label><input id="gl_roomA" type="number" step="any" value="24"></div>
+        <div><label>Площадь остекления, м²</label><input id="gl_glazA" type="number" step="any" value="5"></div>
+        <div><label>Коэф. светопропускания τ<sub>v</sub> (0–1)</label><input id="gl_tau" type="number" step="any" value="0.65"></div>
+        <div><label>Коэф. загрязнения/штор, k (0–1)</label><input id="gl_k" type="number" step="any" value="0.9"></div>
+      </div>
+      <div class="row" style="margin-top:10px"><button class="btn" onclick="calcGlazing()">Рассчитать</button></div>
+      <div id="gl_out" class="out mono" style="margin-top:8px"></div>
+      <p class="muted small">WFR≈(A<sub>glz</sub>·τ<sub>v</sub>·k) / A<sub>room</sub>. Это прикидка для ранних стадий. Для норматива используйте проф. расчёты ДД/КЕО/DF.</p>
+    </div>
+
+    <!-- 5. Материалы: площадь стен под отделку -->
+    <div class="card">
+      <h3>5) Материалы: площадь стен под отделку (без проёмов)</h3>
+      <div class="grid">
+        <div><label>Периметр помещения, м</label><input id="mt_P" type="number" step="any" value="20"></div>
+        <div><label>Высота стен, м</label><input id="mt_H" type="number" step="any" value="2.8"></div>
+        <div><label>Сумма проёмов, м²</label><input id="mt_open" type="number" step="any" value="3"></div>
+        <div><label>Запас на отходы, %</label><input id="mt_waste" type="number" step="any" value="10"></div>
+      </div>
+      <div class="row" style="margin-top:10px"><button class="btn" onclick="calcMaterials()">Рассчитать</button></div>
+      <div id="mt_out" class="out mono" style="margin-top:8px"></div>
+    </div>
+
+    <!-- 6. Кровля: перевод уклона -->
+    <div class="card">
+      <h3>6) Уклон кровли: градусы ⇄ проценты ⇄ отношение</h3>
+      <div class="grid">
+        <div><label>Градусы, °</label><input id="rf_deg" type="number" step="any" value="18"></div>
+        <div><label>Проценты, %</label><input id="rf_pct" type="number" step="any" value=""></div>
+        <div><label>Отношение (1:x)</label><input id="rf_ratio" type="number" step="any" value=""></div>
+      </div>
+      <div class="row" style="margin-top:10px"><button class="btn" onclick="calcRoof()">Пересчитать</button></div>
+      <div id="rf_out" class="out mono" style="margin-top:8px"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+function fmt(x, d=3){ if(!Number.isFinite(x)) return '—'; const a=Math.abs(x); if(a!==0&&(a<1e-4||a>=1e6)) return x.toExponential(6); return x.toLocaleString('ru-RU',{maximumFractionDigits:d}); }
+
+function calcRoom(){
+  const L=+document.getElementById('room_L').value||0;
+  const W=+document.getElementById('room_W').value||0;
+  const H=+document.getElementById('room_H').value||0;
+  const openings=+document.getElementById('room_openings').value||0;
+  const A=L*W; const P=2*(L+W); const Awalls=Math.max(0, P*H - openings);
+  document.getElementById('room_out').innerHTML = `A = ${fmt(A)} м², P = ${fmt(P)} м\u00A0  \nПлощадь стен (минус проёмы) = ${fmt(Awalls)} м²`;
+}
+
+function calcStair(){
+  const H=+document.getElementById('st_H').value||0; // мм
+  let R=+document.getElementById('st_R').value||170; // мм
+  let T=+document.getElementById('st_T').value||280; // мм
+  const Lmax=+document.getElementById('st_Lmax').value||0; // м
+  // Кол-во подступенков: округляем до целого вверх
+  let n = Math.max(1, Math.round(H/R));
+  R = H/n; // фактический R
+  // Подбор T по правилу Блондэля: 2R+T≈630 (±30)
+  const target = 630; T = Math.max(240, Math.min(320, target - 2*R));
+  const run = T*(n-1); // общая горизонтальная проекция, мм
+  const slopeDeg = Math.atan(H/run)*180/Math.PI;
+  const blondel = 2*R + T; const ok = Math.abs(blondel-630)<=30 ? 'OK' : 'ВНЕ диапазона';
+  const marchLen_m = Math.sqrt(H*H + run*run)/1000;
+  const warn = Lmax && marchLen_m>Lmax ? `\nВнимание: длина марша ${fmt(marchLen_m,2)} м > ${Lmax} м` : '';
+  document.getElementById('st_out').innerHTML = `Ступеней n = ${n}\nR = ${fmt(R,1)} мм, T = ${fmt(T,1)} мм\n2R+T = ${fmt(blondel,1)} мм → ${ok}\nПроекция по полу = ${fmt(run/1000,2)} м, угол ≈ ${fmt(slopeDeg,1)}°\nДлина марша ≈ ${fmt(marchLen_m,2)} м${warn}`;
+}
+
+function calcRamp(){
+  const dh=+document.getElementById('rp_h').value||0; // мм
+  const slope=+document.getElementById('rp_slope').value||8; // %
+  const each=+document.getElementById('rp_landing_each').value||6; // м
+  const Lland=+document.getElementById('rp_landing_len').value||1.5; // м
+  const run_m = (dh/1000) / (slope/100); // чистый пролет без площадок
+  const nLand = each>0 ? Math.floor(run_m/each) : 0;
+  const total = run_m + nLand*Lland;
+  document.getElementById('rp_out').innerHTML = `Чистая длина = ${fmt(run_m,2)} м\nПромежуточных площадок: ${nLand} × ${fmt(Lland,2)} м\nИтого длина пандуса ≈ ${fmt(total,2)} м`;
+}
+
+function calcGlazing(){
+  const Aroom=+document.getElementById('gl_roomA').value||0;
+  const Agl=+document.getElementById('gl_glazA').value||0;
+  const tau=+document.getElementById('gl_tau').value||0;
+  const k=+document.getElementById('gl_k').value||0;
+  if(!Aroom){ document.getElementById('gl_out').textContent='Введите площадь помещения'; return; }
+  const ratio = Agl/Aroom; // доля остекления по площади
+  const wfr = (Agl*tau*k)/Aroom; // ориентировочный window-to-floor ratio c учётом τ_v и поправки
+  document.getElementById('gl_out').innerHTML = `Остекление: ${fmt(100*ratio,1)}% от площади пола\nОценочный WFR* = ${fmt(100*wfr,1)}%`;
+}
+
+function calcMaterials(){
+  const P=+document.getElementById('mt_P').value||0;
+  const H=+document.getElementById('mt_H').value||0;
+  const openings=+document.getElementById('mt_open').value||0;
+  const waste=+document.getElementById('mt_waste').value||0;
+  const Awalls = Math.max(0, P*H - openings);
+  const Awalls_w = Awalls*(1+waste/100);
+  document.getElementById('mt_out').innerHTML = `Чистая площадь стен = ${fmt(Awalls,2)} м²\nС учётом запаса ${fmt(waste,0)}% → ${fmt(Awalls_w,2)} м²`;
+}
+
+function calcRoof(){
+  let deg=+document.getElementById('rf_deg').value; let pct=+document.getElementById('rf_pct').value; let ratio=+document.getElementById('rf_ratio').value;
+  if(Number.isFinite(deg) && deg){ pct = Math.tan(deg*Math.PI/180)*100; ratio = 1/Math.tan(deg*Math.PI/180); }
+  else if(Number.isFinite(pct) && pct){ deg = Math.atan(pct/100)*180/Math.PI; ratio = 100/pct; }
+  else if(Number.isFinite(ratio) && ratio){ const t=1/ratio; deg=Math.atan(t)*180/Math.PI; pct=t*100; }
+  document.getElementById('rf_deg').value = deg? deg.toFixed(2):'';
+  document.getElementById('rf_pct').value = pct? pct.toFixed(2):'';
+  document.getElementById('rf_ratio').value = ratio? ratio.toFixed(2):'';
+  document.getElementById('rf_out').textContent = `tan(θ)=${fmt(Math.tan(deg*Math.PI/180),4)}  →  θ=${fmt(deg,2)}°,  i=${fmt(pct,2)}%,  1:${fmt(ratio,2)}`;
+}
+
+// Автозапуск базовых
+calcRoom(); calcStair(); calcRamp(); calcGlazing(); calcMaterials(); calcRoof();
+</script>
+</body>
+</html>

@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Калькулятор Data Engineer — быстрые прикидки</title>
+  <style>
+    :root{--bg:#0f172a;--card:#111827;--muted:#94a3b8;--acc:#22d3ee;--ok:#22c55e;--warn:#f59e0b;--bad:#ef4444}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,Segoe UI,Inter,Roboto,Arial,sans-serif;background:linear-gradient(180deg,#0b1022,#0f172a);color:#e5e7eb}
+    header{padding:24px 16px;text-align:center}
+    header h1{margin:0;font-size:28px}
+    header p{margin:8px 0 0;color:var(--muted)}
+    .container{max-width:1200px;margin:0 auto;padding:16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:16px}
+    .card{background:rgba(17,24,39,.85);backdrop-filter:saturate(140%) blur(6px);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:16px;box-shadow:0 10px 24px rgba(0,0,0,.35)}
+    .card h2{margin:0 0 10px;font-size:18px}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:8px 0}
+    label{font-size:12px;color:var(--muted)}
+    input,select{width:100%;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.08);background:#0b1220;color:#e5e7eb;outline:none}
+    input:focus,select:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(34,211,238,.15)}
+    .btn{display:inline-block;margin-top:8px;padding:8px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.12);cursor:pointer;background:#0b1220;color:#e5e7eb}
+    .btn:hover{border-color:var(--acc)}
+    .out{margin-top:10px;padding:10px;border-radius:12px;background:#0b1220;border:1px dashed rgba(255,255,255,.08);font-variant-numeric:tabular-nums;white-space:pre-line}
+    .muted{color:var(--muted);font-size:12px}
+    .tag{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.12);font-size:12px;color:#cbd5e1}
+    .ok{color:var(--ok)}.warn{color:var(--warn)}.bad{color:var(--bad)}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Калькулятор Data Engineer — архитектура данных</h1>
+    <p>Kafka/стримы · HDFS/S3 хранение и стоимость · Spark размер кластера · Batch‑окна · Партиционирование</p>
+  </header>
+
+  <main class="container">
+    <!-- 1) Event stream & Kafka retention sizing -->
+    <section class="card" id="kafka">
+      <h2>Стриминг и Kafka: объём и Retention</h2>
+      <div class="row">
+        <div>
+          <label>События в секунду (EPS)</label>
+          <input type="number" id="eps" value="5000" step="1">
+        </div>
+        <div>
+          <label>Средний размер события, байт</label>
+          <input type="number" id="ev_size" value="800" step="1">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Срок хранения, дней</label>
+          <input type="number" id="ret_days" value="7" step="1">
+        </div>
+        <div>
+          <label>Коэфф. репликации (RF)</label>
+          <input type="number" id="rf" value="3" step="1">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Коэфф. компрессии (0.1–1.0)</label>
+          <input type="number" id="comp" value="0.5" step="0.05" min="0.1" max="1">
+        </div>
+        <div>
+          <label>Брокеров Kafka</label>
+          <input type="number" id="brokers" value="3" step="1">
+        </div>
+      </div>
+      <button class="btn" onclick="calcKafka()">Рассчитать</button>
+      <div class="out" id="kafka_out"></div>
+      <p class="muted">Примечание: объём = EPS·size·86400·дни·компрессия·RF. Пропускная = EPS·size/1024² (МБ/с).</p>
+    </section>
+
+    <!-- 2) Kafka partitions planner -->
+    <section class="card" id="part">
+      <h2>Kafka: планировщик партиций</h2>
+      <div class="row">
+        <div>
+          <label>Суммарный поток, МБ/с</label>
+          <input type="number" id="throughput" value="3.81" step="0.01">
+        </div>
+        <div>
+          <label>Предел на партицию, МБ/с</label>
+          <input type="number" id="per_part" value="5" step="0.1">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Желаемая параллельность потребителей</label>
+          <input type="number" id="cons_parallel" value="6" step="1">
+        </div>
+        <div>
+          <label>Брокеров</label>
+          <input type="number" id="part_brokers" value="3" step="1">
+        </div>
+      </div>
+      <button class="btn" onclick="calcPartitions()">Подобрать партиции</button>
+      <div class="out" id="part_out"></div>
+      <p class="muted">Правила: ≥ макс(параллельности потребителей, поток/лимит на партицию). Не забывайте про балансировку по брокерам.</p>
+    </section>
+
+    <!-- 3) Storage & cost (HDFS/S3) -->
+    <section class="card" id="storage">
+      <h2>Хранилище и стоимость (HDFS/S3)</h2>
+      <div class="row">
+        <div>
+          <label>Итого данных, ТБ</label>
+          <input type="number" id="tot_tb" value="50" step="0.1">
+        </div>
+        <div>
+          <label>Коэфф. избыточности</label>
+          <select id="redund">
+            <option value="1">S3/облако (1×)</option>
+            <option value="2">Erasure coding (≈1.5–2×)</option>
+            <option value="3" selected>HDFS RF=3 (3×)</option>
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Цена, $/ГБ·мес</label>
+          <input type="number" id="price_gb" value="0.023" step="0.001">
+        </div>
+        <div>
+          <label>PUT/мес (тыс.)</label>
+          <input type="number" id="puts_k" value="100" step="1">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>GET/мес (тыс.)</label>
+          <input type="number" id="gets_k" value="500" step="1">
+        </div>
+        <div>
+          <label>$ за 1000 PUT / GET</label>
+          <input type="text" id="req_price" value="0.005 / 0.0004">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Курс $→KZT</label>
+          <input type="number" id="usd_kzt" value="500" step="1">
+        </div>
+        <div>
+          <label>Ежемесячный трафик, ТБ</label>
+          <input type="number" id="egress_tb" value="2" step="0.1">
+        </div>
+      </div>
+      <button class="btn" onclick="calcStorage()">Посчитать стоимость</button>
+      <div class="out" id="store_out"></div>
+      <p class="muted">Цены примерные и редактируемые. Для он‑прем требуется учесть стоимость дисков, серверов, эл‑ва и эксплуатацию.</p>
+    </section>
+
+    <!-- 4) Spark sizing -->
+    <section class="card" id="spark">
+      <h2>Spark: размер экзекьюторов и параллельность</h2>
+      <div class="row">
+        <div>
+          <label>Объём набора (raw), ГБ</label>
+          <input type="number" id="ds_gb" value="500" step="1">
+        </div>
+        <div>
+          <label>Коэфф. компрессии (Parquet)</label>
+          <input type="number" id="parq_comp" value="0.3" step="0.05">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Shuffle‑фактор (1.5–3)</label>
+          <input type="number" id="shuffle" value="2" step="0.1">
+        </div>
+        <div>
+          <label>Память на ядро, ГБ</label>
+          <input type="number" id="mem_per_core" value="3" step="0.5">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Ядер на экзекьютор</label>
+          <input type="number" id="cores_exec" value="4" step="1">
+        </div>
+        <div>
+          <label>Запас/overhead, %</label>
+          <input type="number" id="overhead" value="20" step="1">
+        </div>
+      </div>
+      <button class="btn" onclick="calcSpark()">Подобрать конфиг</button>
+      <div class="out" id="spark_out"></div>
+      <p class="muted">Эвристика: оперативная память ≈ (данные после компрессии × shuffle) / параллельность. 2–5 ГБ/ядро — здравый старт.</p>
+    </section>
+
+    <!-- 5) Batch window -->
+    <section class="card" id="batch">
+      <h2>Batch‑окно (оценка времени)</h2>
+      <div class="row">
+        <div>
+          <label>Данные за цикл, ГБ</label>
+          <input type="number" id="batch_gb" value="200" step="1">
+        </div>
+        <div>
+          <label>Скорость на ядро, МБ/с</label>
+          <input type="number" id="mbps_core" value="20" step="1">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Доступно ядер</label>
+          <input type="number" id="cores" value="32" step="1">
+        </div>
+        <div>
+          <label>Накладные, %</label>
+          <input type="number" id="batch_ovh" value="25" step="1">
+        </div>
+      </div>
+      <button class="btn" onclick="calcBatch()">Оценить</button>
+      <div class="out" id="batch_out"></div>
+      <p class="muted">Грубая оценка: t ≈ (объём / (скорость×ядра)) × (1+накладные).</p>
+    </section>
+
+    <!-- 6) Партиционирование файлов/таблиц -->
+    <section class="card" id="parts">
+      <h2>Партиционирование (размер файлов/партий)</h2>
+      <div class="row">
+        <div>
+          <label>Датасет, ГБ (после компрессии)</label>
+          <input type="number" id="pp_gb" value="150" step="1">
+        </div>
+        <div>
+          <label>Целевой размер файла, МБ</label>
+          <input type="number" id="pp_mb" value="256" step="1">
+        </div>
+      </div>
+      <button class="btn" onclick="calcPartitionsFiles()">Посчитать</button>
+      <div class="out" id="pp_out"></div>
+      <p class="muted">Хорошие ориентиры: Parquet 128–512 МБ; Spark partitions ≈ 2–4×число ядер кластера.</p>
+    </section>
+  </main>
+
+  <section style="max-width:1200px;margin:20px auto 40px;padding:0 16px;color:var(--muted)">
+    <div class="tag">v1.0</div>
+    <p class="muted">⚠️ Упрощённые прикидки. Для прод‑систем учитывайте SLA, всплески (p99), компрессию, схему (Avro/Protobuf), ретраи и лимиты дисков/сети/CPU.</p>
+  </section>
+
+  <script>
+    const fmt=(v,d=2)=>Number(v).toFixed(d);
+
+    function calcKafka(){
+      const EPS=+eps.value, SZ=+ev_size.value, D=+ret_days.value, RF=+rf.value, C=+comp.value, B=+brokers.value;
+      const bytesPerSec = EPS*SZ; // B/s
+      const MBps = bytesPerSec/1024/1024;
+      const dailyGB = bytesPerSec*86400/1024/1024/1024; // GB/day uncompressed
+      const storedTB = dailyGB*D*C*RF/1024; // TB
+      const perBrokerTB = storedTB/B;
+      kafka_out.innerHTML = `Поток: <b>${fmt(MBps,2)} МБ/с</b>\nСуточный объём (raw): <b>${fmt(dailyGB,2)} ГБ/сут</b>\nХранение на ${D} дней (с компрессией×RF): <b>${fmt(storedTB,2)} ТБ</b> (~ по ${fmt(perBrokerTB,2)} ТБ/брокер)`;
+      // автозаполнить для раздела партиций
+      throughput.value = fmt(MBps,2);
+    }
+
+    function calcPartitions(){
+      const thr=+throughput.value; const per=+per_part.value; const cp=+cons_parallel.value; const br=+part_brokers.value;
+      const byRate = Math.ceil(thr/per);
+      const target = Math.max(byRate, cp, br); // минимум по равномерному распределению — не меньше брокеров
+      const perBroker = Math.ceil(target/br);
+      part_out.innerHTML = `Минимум по скорости: ${byRate} партиций\nВыбор: <b>${target}</b> партиций (≈ ${perBroker}/брокер)`;
+    }
+
+    function calcStorage(){
+      const TB=+tot_tb.value; const red=+redund.value; const price=+price_gb.value; const putK=+puts_k.value; const getK=+gets_k.value; const usdKZT=+usd_kzt.value; const egTB=+egress_tb.value;
+      const [putPrice, getPrice] = req_price.value.split('/').map(s=>parseFloat(s.trim()));
+      const logicalTB = TB; const physicalTB = TB*red; // учитываем избыточность
+      const GB=physicalTB*1024; const storageUSD = GB*price;
+      const reqUSD = putK*putPrice + getK*getPrice;
+      const egressUSD = egTB*0.09*1024/1024; // оставим 0.09$/ГБ как editable идею? здесь используем 0.09$/ГБ для примера: 1 ТБ = 1024 ГБ
+      const totalUSD = storageUSD + reqUSD + egressUSD;
+      const totalKZT = totalUSD*usdKZT;
+      store_out.innerHTML = `Логический объём: <b>${fmt(logicalTB,2)} ТБ</b>  → физический с избыточностью: <b>${fmt(physicalTB,2)} ТБ</b>\nХранение: <b>${fmt(storageUSD,2)} $/мес</b>\nЗапросы: <b>${fmt(reqUSD,2)} $/мес</b>\nEgress (оценка): <b>${fmt(egressUSD,2)} $/мес</b>\nИтого: <b>${fmt(totalUSD,2)} $</b> (~ <b>${fmt(totalKZT,0)} KZT</b>)`;
+    }
+
+    function calcSpark(){
+      const rawGB=+ds_gb.value; const comp=+parq_comp.value; const sh=+shuffle.value; const mpc=+mem_per_core.value; const coresExec=+cores_exec.value; const oh=1+(+overhead.value)/100;
+      const onDiskGB = rawGB*comp; // после компрессии
+      const inMemGB = onDiskGB*sh; // оценка для join/agg
+      // Оценка требуемой параллельности (файлы ~256 МБ)
+      const targetPart = Math.ceil((onDiskGB*1024)/256);
+      const totalCores = Math.ceil(targetPart/2); // 2 партиции на ядро
+      const execMem = mpc*coresExec*oh; // ГБ на экзекьютор
+      const executors = Math.ceil(totalCores/coresExec);
+      spark_out.innerHTML = `Объём на диске: <b>${fmt(onDiskGB,1)} ГБ</b>\nПамять под вычисления: ~<b>${fmt(inMemGB,1)} ГБ</b>\nЦелевая параллельность: ~<b>${targetPart}</b> партиций\nИтого: <b>${executors}</b> экзекьюторов × ${coresExec} ядер = <b>${executors*coresExec}</b> ядер\nПамять на экзекьютор ≈ <b>${fmt(execMem,1)} ГБ</b>`;
+    }
+
+    function calcBatch(){
+      const GB=+batch_gb.value; const mbps=+mbps_core.value; const cores=+cores.value; const ovh=1+(+batch_ovh.value)/100;
+      const MB = GB*1024; const sec = (MB/(mbps*cores))*ovh; const hours = sec/3600;
+      batch_out.innerHTML = `Оценка: <b>${fmt(hours,2)} ч</b> (≈ ${fmt(sec/60,1)} мин)`;
+    }
+
+    function calcPartitionsFiles(){
+      const GB=+pp_gb.value; const MBfile=+pp_mb.value; const files = Math.ceil(GB*1024 / MBfile);
+      pp_out.innerHTML = `Рекомендуемое число файлов: <b>${files}</b> (≈ ${fmt(files/4,0)}–${fmt(files/2,0)} ядер для 2–4 партиций/ядро)`;
+    }
+
+    // авто‑инициализация
+    window.addEventListener('DOMContentLoaded',()=>{calcKafka();calcPartitions();calcStorage();calcSpark();calcBatch();calcPartitionsFiles();});
+  </script>
+</body>
+</html>

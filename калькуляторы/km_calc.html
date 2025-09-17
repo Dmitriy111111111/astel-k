@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Калькулятор КМ — быстрые проверки</title>
+  <style>
+    :root{--bg:#0f172a;--card:#111827;--muted:#94a3b8;--acc:#22d3ee;--ok:#22c55e;--warn:#f59e0b;--bad:#ef4444}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,Segoe UI,Inter,Roboto,Arial,sans-serif;background:linear-gradient(180deg,#0b1022,#0f172a);color:#e5e7eb}
+    header{padding:24px 16px;text-align:center}
+    header h1{margin:0;font-size:28px}
+    header p{margin:8px 0 0;color:var(--muted)}
+    .container{max-width:1200px;margin:0 auto;padding:16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:16px}
+    .card{background:rgba(17,24,39,.85);backdrop-filter:saturate(140%) blur(6px);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:16px;box-shadow:0 10px 24px rgba(0,0,0,.35)}
+    .card h2{margin:0 0 10px;font-size:18px}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:8px 0}
+    label{font-size:12px;color:var(--muted)}
+    input,select{width:100%;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.08);background:#0b1220;color:#e5e7eb;outline:none}
+    input:focus,select:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(34,211,238,.15)}
+    .btn{display:inline-block;margin-top:8px;padding:8px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.12);cursor:pointer;background:#0b1220;color:#e5e7eb}
+    .btn:hover{border-color:var(--acc)}
+    .out{margin-top:10px;padding:10px;border-radius:12px;background:#0b1220;border:1px dashed rgba(255,255,255,.08);font-variant-numeric:tabular-nums;white-space:pre-line}
+    .muted{color:var(--muted);font-size:12px}
+    .tag{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.12);font-size:12px;color:#cbd5e1}
+    .ok{color:var(--ok)}.warn{color:var(--warn)}.bad{color:var(--bad)}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Калькулятор КМ — металлоконструкции</h1>
+    <p>Балка (изгиб/прогиб) · Колонна (устойчивость) · Болтовое соединение (срез) · Сварной шов · Масса/стойкости профилей</p>
+  </header>
+
+  <main class="container">
+    <!-- Материалы и E -->
+    <section class="card" id="mats">
+      <h2>Материал и нормативы</h2>
+      <div class="row">
+        <div>
+          <label>Сталь fy, МПа</label>
+          <select id="fy">
+            <option value="235">S235</option>
+            <option value="275">S275</option>
+            <option value="345" selected>S345 / С345</option>
+            <option value="355">S355</option>
+          </select>
+        </div>
+        <div>
+          <label>γ<sub>M</sub> (прочность)</label>
+          <input type="number" id="gammaM" value="1.05" step="0.01">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Модуль упругости E, ГПа</label>
+          <input type="number" id="E" value="210" step="1">
+        </div>
+        <div>
+          <label>Предел прочности f<sub>u</sub>, МПа</label>
+          <input type="number" id="fu" value="510" step="1">
+        </div>
+      </div>
+      <div class="out" id="mat_out"></div>
+      <button class="btn" onclick="updMats()">Применить</button>
+      <p class="muted">f<sub>yd</sub>=fy/γ<sub>M</sub>. Здесь и далее расчёты укрупнённые по духу EC3/SP, для экспресс‑оценок.</p>
+    </section>
+
+    <!-- Балка -->
+    <section class="card" id="beam">
+      <h2>Балка: изгиб и прогиб (UDL)</h2>
+      <div class="row">
+        <div>
+          <label>Пролет L, м</label>
+          <input type="number" id="L" value="6" step="0.1">
+        </div>
+        <div>
+          <label>Равномерная нагрузка q, кН/м</label>
+          <input type="number" id="q" value="12" step="0.1">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Секция</label>
+          <select id="sect" onchange="applySect()"></select>
+        </div>
+        <div>
+          <label>Лимит прогиба L/η</label>
+          <input type="number" id="deflim" value="250" step="10">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Мом. сопротивление W, см³</label>
+          <input type="number" id="W" value="393" step="1">
+        </div>
+        <div>
+          <label>Момент инерции I, см⁴</label>
+          <input type="number" id="I" value="7850" step="1">
+        </div>
+      </div>
+      <button class="btn" onclick="calcBeam()">Рассчитать балку</button>
+      <div class="out" id="beam_out"></div>
+      <p class="muted">M<sub>max</sub>=qL²/8; V<sub>max</sub>=qL/2; δ<sub>max</sub>=5qL⁴/(384EI). Проверка по напряжению: σ=M/W ≤ f<sub>yd</sub>.</p>
+    </section>
+
+    <!-- Колонна -->
+    <section class="card" id="col">
+      <h2>Колонна: устойчивость (сжатие)</h2>
+      <div class="row">
+        <div>
+          <label>Длина L, м</label>
+          <input type="number" id="cL" value="4.0" step="0.1">
+        </div>
+        <div>
+          <label>Коэф. длины K</label>
+          <input type="number" id="cK" value="1.0" step="0.1">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Площадь A, см²</label>
+          <input type="number" id="cA" value="46.1" step="0.1">
+        </div>
+        <div>
+          <label>i<sub>y</sub>, см (радиус инерции)</label>
+          <input type="number" id="ci" value="5.3" step="0.1">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>N<sub>Ed</sub>, кН</label>
+          <input type="number" id="cNed" value="900" step="10">
+        </div>
+        <div>
+          <label>Кривая потери устойчивости</label>
+          <select id="buckCurve">
+            <option value="0.21">Curve a (α=0.21)</option>
+            <option value="0.34" selected>Curve b (α=0.34)</option>
+            <option value="0.49">Curve c (α=0.49)</option>
+            <option value="0.76">Curve d (α=0.76)</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn" onclick="calcColumn()">Рассчитать колонну</button>
+      <div class="out" id="col_out"></div>
+      <p class="muted">χ по Perry–Robertson (EC3): φ=0.5[1+α(λ̄−0.2)+λ̄²]; χ=1/(φ+√(φ²−λ̄²)); λ̄=λ·√(fy/(π²E)). N<sub>Rd</sub>=χ·A·f<sub>y</sub>/γ.</p>
+    </section>
+
+    <!-- Болты -->
+    <section class="card" id="bolts">
+      <h2>Болтовое соединение: срез</h2>
+      <div class="row">
+        <div>
+          <label>Диаметр d, мм</label>
+          <input type="number" id="bd" value="16" step="1">
+        </div>
+        <div>
+          <label>Класс прочности</label>
+          <select id="bclass">
+            <option value="8.8" selected>8.8</option>
+            <option value="10.9">10.9</option>
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Число болтов, шт</label>
+          <input type="number" id="bn" value="8" step="1">
+        </div>
+        <div>
+          <label>Срезных плоскостей</label>
+          <select id="bplanes">
+            <option value="1">1</option>
+            <option value="2" selected>2</option>
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Дизайн‑усилие, кН</label>
+          <input type="number" id="bVed" value="180" step="1">
+        </div>
+        <div>
+          <label>γ<sub>M2</sub></label>
+          <input type="number" id="bgamma" value="1.25" step="0.01">
+        </div>
+      </div>
+      <button class="btn" onclick="calcBolts()">Проверить</button>
+      <div class="out" id="bolt_out"></div>
+      <p class="muted">Проверка по срезу: V<sub>Rd</sub>=α<sub>v</sub>·f<sub>ub</sub>·A<sub>s</sub>·nPlanes/γ<sub>M2</sub>.
+        Для 8.8: f<sub>ub</sub>≈800 МПа, α<sub>v</sub>≈0.6. Учтите также смятие отверстий (bearing) и расстояния по нормам.</p>
+    </section>
+
+    <!-- Сварка -->
+    <section class="card" id="weld">
+      <h2>Стыковой/угловой шов: несущая</h2>
+      <div class="row">
+        <div>
+          <label>Катет a, мм</label>
+          <input type="number" id="wa" value="6" step="1">
+        </div>
+        <div>
+          <label>Длина шва, мм</label>
+          <input type="number" id="wL" value="120" step="1">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>γ<sub>M2</sub> (сварка)</label>
+          <input type="number" id="wgamma" value="1.25" step="0.01">
+        </div>
+        <div>
+          <label>f<sub>u</sub> металла шва, МПа</label>
+          <input type="number" id="wfu" value="440" step="1">
+        </div>
+      </div>
+      <button class="btn" onclick="calcWeld()">Рассчитать шов</button>
+      <div class="out" id="w_out"></div>
+      <p class="muted">Упрощённо: F<sub>Rd</sub>=0.7·a·L·f<sub>u</sub>/(√3·γ<sub>M2</sub>) (продольное сдвиговое нагружение). Проверяйте эксцентриситет и комбинированные напряжения.</p>
+    </section>
+
+    <!-- Масса профиля -->
+    <section class="card" id="mass">
+      <h2>Профили: W, I, A и масса</h2>
+      <div class="row">
+        <div>
+          <label>Профиль</label>
+          <select id="psect" onchange="applySect2()"></select>
+        </div>
+        <div>
+          <label>Длина, м</label>
+          <input type="number" id="plen" value="6" step="0.1">
+        </div>
+      </div>
+      <div class="out" id="mass_out"></div>
+      <p class="muted">Справочник включает несколько типовых IPE/HEA/SHS. Можно ввести свои W/I/A в блоках балки/колонны.</p>
+    </section>
+  </main>
+
+  <section style="max-width:1200px;margin:20px auto 40px;padding:0 16px;color:var(--muted)">
+    <div class="tag">v1.0</div>
+    <p class="muted">⚠️ Инструмент для быстрых прикидок. Для РД/КМД — полный расчёт по СП/EC3, узлы в IDEA StatiCa/SCAD/LIRA/STAAD и проверка по нормативам РК.</p>
+  </section>
+
+  <script>
+    // --- Materials ---
+    let fyd=345/1.05, E=210e3, fu=510; // E in MPa
+    function updMats(){
+      const fy=+document.getElementById('fy').value; const gm=+gammaM.value; E=+E.value*1e3; fu=+document.getElementById('fu').value; fyd=fy/gm; 
+      document.getElementById('mat_out').innerText=`fyd = ${fyd.toFixed(1)} МПа,  E = ${(E/1e3).toFixed(0)} ГПа`;
+    }
+    updMats();
+
+    // --- Small section db (values approx; W,I in cm^3/cm^4, A in cm^2, mass kg/m) ---
+    const SECT_DB = {
+      "IPE160": {W: 393, I: 7850, A: 20.9, mass: 16.4, i: 6.1},
+      "IPE200": {W: 691, I: 13800, A: 26.2, mass: 20.6, i: 7.5},
+      "HEA200": {W: 1020, I: 20400, A: 53.8, mass: 42.2, i: 6.2},
+      "HEB200": {W: 1280, I: 25600, A: 78.1, mass: 61.3, i: 5.7},
+      "SHS 120x6": {W: 338, I: 6760, A: 26.5, mass: 20.8, i: 5.0}
+    };
+    // populate selects
+    function fillSelects(){
+      const keys=Object.keys(SECT_DB);
+      const s1=document.getElementById('sect');
+      const s2=document.getElementById('psect');
+      keys.forEach(k=>{ let o1=document.createElement('option'); o1.value=k; o1.textContent=k; s1.appendChild(o1);
+                         let o2=document.createElement('option'); o2.value=k; o2.textContent=k; s2.appendChild(o2); });
+      s1.value='IPE160'; s2.value='IPE160'; applySect(); applySect2();
+    }
+    window.addEventListener('DOMContentLoaded', fillSelects);
+
+    function applySect(){ let s=SECT_DB[sect.value]; if(!s) return; W.value=s.W; I.value=s.I; }
+    function applySect2(){ let s=SECT_DB[psect.value]; if(!s) return; mass_out.innerText=`A=${s.A} см²,  W=${s.W} см³,  I=${s.I} см⁴,  i≈${s.i} см\nМасса: ${(s.mass*plen.value).toFixed(2)} кг (на ${plen.value} м)`; }
+
+    // --- Beam calc ---
+    function calcBeam(){
+      const Lm=+L.value; const qk=+q.value; // m, kN/m
+      const Wcm3=+W.value; const Icm4=+I.value; // cm3, cm4
+      const Wmm3=Wcm3*1e3; const Imm4=Icm4*1e4; // convert to mm3, mm4
+      const Lmm=Lm*1000; const qNpm=qk*1e3; // N/m
+      const Mmax = qNpm*Math.pow(Lm,2)/8; // kN·m -> actually N·m
+      const M_Nmm = Mmax*1e3*1e3; // N·mm
+      const sigma = M_Nmm / Wmm3; // MPa
+      const util = sigma / fyd;
+
+      // deflection (mm)
+      const delta = (5*qNpm*Math.pow(Lmm,4))/(384*E*Imm4); // q[N/m], L[mm], E[MPa], I[mm^4]
+      const lim = Lmm/(+deflim.value);
+      const okStr = util<=1? 'ОК' : (util<=1.05? 'На грани':'Недостаточно');
+      const cls = util<=1? 'ok' : (util<=1.05? 'warn':'bad');
+      const okDef = delta<=lim? 'ОК' : 'Превышен';
+
+      beam_out.innerHTML=
+        `Mmax=${(Mmax).toFixed(1)} кН·м, Vmax=${(qk*Lm/2).toFixed(1)} кН\n`+
+        `Напряжение: σ=${sigma.toFixed(1)} МПа → <b class="${cls}">${okStr}</b> (util=${util.toFixed(2)})\n`+
+        `Прогиб: δ=${delta.toFixed(1)} мм (лимит ${lim.toFixed(1)} мм → ${okDef})`;
+    }
+
+    // --- Column buckling ---
+    function calcColumn(){
+      const Lm=+cL.value; const K=+cK.value; const Acm2=+cA.value; const i_cm=+ci.value; const Ned_kN=+cNed.value; const alpha=parseFloat(buckCurve.value);
+      const A_mm2 = Acm2*100; const i_mm=i_cm*10; const Le=K*Lm*1000; // mm
+      const lambda = Le/i_mm; // slenderness
+      const fy=+document.getElementById('fy').value; const gm=+gammaM.value; const fydLoc = fy/gm; const E_MPa=(+document.getElementById('E').value)*1e3;
+      const lambda_bar = lambda*Math.sqrt(fy/(Math.PI*Math.PI*E_MPa));
+      const phi = 0.5*(1 + alpha*(lambda_bar-0.2) + lambda_bar*lambda_bar);
+      const chi = 1/(phi + Math.sqrt(phi*phi - lambda_bar*lambda_bar));
+      const Nrd_kN = chi * (A_mm2 * fydLoc) / 1000; // kN
+      const util = Ned_kN / Nrd_kN;
+      const cls = util<=1? 'ok' : (util<=1.05? 'warn':'bad');
+      col_out.innerHTML =
+        `λ=${lambda.toFixed(0)},  λ̄=${lambda_bar.toFixed(2)},  χ=${chi.toFixed(2)}\n`+
+        `Nrd≈${Nrd_kN.toFixed(0)} кН → <b class="${cls}">${util<=1?'ОК':(util<=1.05?'На грани':'Недостаточно')}</b> (util=${util.toFixed(2)})`;
+    }
+
+    // --- Bolts shear ---
+    function calcBolts(){
+      const d=+bd.value; const n=+bn.value; const planes=+bplanes.value; const Ved=+bVed.value; const gm=+bgamma.value; const clsVal=bclass.value;
+      const fub = clsVal==='10.9'? 1000 : 800; // MPa approximate ultimate
+      const av = 0.6; // shear factor
+      const As = Math.PI*Math.pow(d,2)/4; // mm2
+      const Vrd_per_bolt_kN = av*fub*As*planes/(gm*1000); // kN
+      const Vrd_total = Vrd_per_bolt_kN*n;
+      const util = Ved / Vrd_total;
+      const cls = util<=1? 'ok' : (util<=1.05? 'warn':'bad');
+      bolt_out.innerHTML =
+        `As=${As.toFixed(0)} мм²,  плоскостей=${planes}\n`+
+        `Vrd(на болт)≈${Vrd_per_bolt_kN.toFixed(1)} кН; ΣVrd≈${Vrd_total.toFixed(1)} кН\n`+
+        `Итог: <b class="${cls}">${util<=1?'ОК':(util<=1.05?'На грани':'Недостаточно')}</b> (util=${util.toFixed(2)})\n`+
+        `⚠️ Проверьте также смятие отверстий, расстояния и трение/преднатяг (если HV).`;
+    }
+
+    // --- Weld ---
+    function calcWeld(){
+      const a=+wa.value; const L=+wL.value; const gm=+wgamma.value; const f=+wfu.value; // MPa
+      const Frd_kN = 0.7*a*L*f/(Math.sqrt(3)*gm*1000); // kN
+      w_out.innerText = `F_Rd≈${Frd_kN.toFixed(1)} кН  (упр. продольный сдвиг)\n⚠️ Учитывайте направление сил и эксцентриситет.`;
+    }
+  </script>
+</body>
+</html>

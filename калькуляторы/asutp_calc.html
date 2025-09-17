@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Калькулятор АСУ ТП — I&C Utilities</title>
+  <style>
+    :root{
+      --bg:#0f172a;--card:#111827;--muted:#94a3b8;--accent:#22d3ee;--ok:#22c55e;--warn:#f59e0b;--bad:#ef4444
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;background:linear-gradient(180deg,#0b1022,#0f172a);color:#e5e7eb}
+    header{padding:24px 16px;text-align:center}
+    header h1{margin:0;font-size:28px}
+    header p{margin:8px 0 0;color:var(--muted)}
+    .container{max-width:1200px;margin:0 auto;padding:16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px}
+    .card{background:rgba(17,24,39,.8);backdrop-filter:saturate(140%) blur(6px);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:16px;box-shadow:0 10px 24px rgba(0,0,0,.35)}
+    .card h2{margin:0 0 10px;font-size:18px}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:8px 0}
+    .row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:8px 0}
+    label{font-size:12px;color:var(--muted)}
+    input,select{width:100%;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.08);background:#0b1220;color:#e5e7eb;outline:none}
+    input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(34,211,238,.15)}
+    .out{margin-top:10px;padding:10px;border-radius:12px;background:#0b1220;border:1px dashed rgba(255,255,255,.08);font-variant-numeric:tabular-nums;white-space:pre-line}
+    .muted{color:var(--muted);font-size:12px}
+    .btn{display:inline-block;margin-top:8px;padding:8px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.12);cursor:pointer;background:#0b1220;color:#e5e7eb}
+    .btn:hover{border-color:var(--accent)}
+    .small{font-size:12px}
+    .pill{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.12);font-size:12px;color:#cbd5e1}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Калькулятор АСУ ТП — I&C</h1>
+    <p>Скалирование 4–20 мА/0–10 В · Шунт · Проверка петли · PT100 · PID ZN · ADC↔инженерные</p>
+  </header>
+
+  <main class="container">
+    <!-- 1) 4–20 mA ↔ инженерные единицы -->
+    <section class="card" id="mA">
+      <h2>Скалирование 4–20 мА ↔ инженерные единицы</h2>
+      <div class="row">
+        <div>
+          <label>Нижняя граница процесса (Eng min)</label>
+          <input type="number" id="engMin" value="0" step="0.001">
+        </div>
+        <div>
+          <label>Верхняя граница процесса (Eng max)</label>
+          <input type="number" id="engMax" value="100" step="0.001">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Ток, мА → Eng</label>
+          <input type="number" id="mAin" value="12" step="0.001">
+        </div>
+        <div>
+          <label>Eng → Ток, мА</label>
+          <input type="number" id="engin" value="50" step="0.001">
+        </div>
+      </div>
+      <button class="btn" onclick="calcMA()">Рассчитать</button>
+      <div class="out" id="ma_out"></div>
+      <p class="muted small">Линейное соответствие: 4 мА = EngMin, 20 мА = EngMax.</p>
+    </section>
+
+    <!-- 2) Шунт для 4–20 мА → напряжение -->
+    <section class="card" id="shunt">
+      <h2>Шунт для преобразования 4–20 мА → напряжение</h2>
+      <div class="row">
+        <div>
+          <label>Требуемое U<sub>FS</sub>, В (на 20 мА)</label>
+          <input type="number" id="sh_vfs" value="5" step="0.001">
+        </div>
+        <div>
+          <label>Макс. ток, мА (обычно 20)</label>
+          <input type="number" id="sh_ifull" value="20" step="0.001">
+        </div>
+      </div>
+      <button class="btn" onclick="calcShunt()">Рассчитать</button>
+      <div class="out" id="sh_out"></div>
+      <p class="muted small">R = U/I. Проверяйте рассеиваемую мощность: P = I²·R с запасом ≥50%.</p>
+    </section>
+
+    <!-- 3) Проверка петли 4–20 мА по напряжению (loop power) -->
+    <section class="card" id="loop">
+      <h2>Проверка питания токовой петли</h2>
+      <div class="row">
+        <div>
+          <label>Источник, В</label>
+          <input type="number" id="lp_Vs" value="24" step="0.01">
+        </div>
+        <div>
+          <label>Ток петли, мА (макс.)</label>
+          <input type="number" id="lp_I" value="20" step="0.01">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Падение на передатчике, В</label>
+          <input type="number" id="lp_tx" value="12" step="0.01">
+        </div>
+        <div>
+          <label>Падение на приёмнике (шунт/AI), В</label>
+          <input type="number" id="lp_rx" value="5" step="0.01">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Длина линии (одна сторона), м</label>
+          <input type="number" id="lp_len" value="150" step="1">
+        </div>
+        <div>
+          <label>Сопротивление жилы, Ом/км</label>
+          <input type="number" id="lp_Rkm" value="22" step="0.1">
+        </div>
+      </div>
+      <button class="btn" onclick="calcLoop()">Проверить</button>
+      <div class="out" id="lp_out"></div>
+      <p class="muted small">Проверка: V<sub>supply</sub> ≥ V<sub>Tx</sub> + V<sub>Rx</sub> + I·Rкабеля (две жилы).</p>
+    </section>
+
+    <!-- 4) PT100 IEC 60751 (0…850 °C) & обратный расчёт -->
+    <section class="card" id="pt100">
+      <h2>PT100 (IEC 60751): T ↔ R</h2>
+      <div class="row">
+        <div>
+          <label>Температура, °C → R, Ом</label>
+          <input type="number" id="pt_T" value="100" step="0.1">
+        </div>
+        <div>
+          <label>Сопротивление, Ом → T, °C</label>
+          <input type="number" id="pt_R" value="138.5" step="0.001">
+        </div>
+      </div>
+      <button class="btn" onclick="calcPT100()">Рассчитать</button>
+      <div class="out" id="pt_out"></div>
+      <p class="muted small">Формулы Callendar–Van Dusen для 0…850 °C: R=R0(1+At+Bt²); обратный расчёт — через квадратное уравнение. Для t<0 °C требуется член C, здесь не реализован.</p>
+    </section>
+
+    <!-- 5) 0–10 В ↔ инженерные единицы & 0–10 В ↔ 4–20 мА -->
+    <section class="card" id="volt">
+      <h2>0–10 В: скалирование и преобразование в 4–20 мА</h2>
+      <div class="row">
+        <div>
+          <label>Uвх, В (0–10)</label>
+          <input type="number" id="v_in" value="5" step="0.001">
+        </div>
+        <div>
+          <label>Eng min/max</label>
+          <input type="text" id="v_eng" value="0..100">
+        </div>
+      </div>
+      <button class="btn" onclick="calcVolt()">Рассчитать</button>
+      <div class="out" id="v_out"></div>
+      <p class="muted small">Линейная аппроксимация. Для 0–10 В → 4–20 мА часто применяют преобразователь; расчёт показывает целевое значение тока.</p>
+    </section>
+
+    <!-- 6) Быстрые настройки PID (Ziegler–Nichols) -->
+    <section class="card" id="pid">
+      <h2>Быстрая настройка PID (Ziegler–Nichols)</h2>
+      <div class="row">
+        <div>
+          <label>Граничный коэффициент Ku</label>
+          <input type="number" id="pid_Ku" value="2.5" step="0.001">
+        </div>
+        <div>
+          <label>Период колебаний Tu, с</label>
+          <input type="number" id="pid_Tu" value="8" step="0.001">
+        </div>
+      </div>
+      <button class="btn" onclick="calcPID()">Рассчитать</button>
+      <div class="out" id="pid_out"></div>
+      <p class="muted small">Метод колебаний: довести P до устойчивых колебаний → зафиксировать Ku, Tu. Далее таблица ZN: P/PI/PID.</p>
+    </section>
+  </main>
+
+  <section style="max-width:1200px;margin:20px auto 40px;padding:0 16px;color:var(--muted)">
+    <div class="pill">v1.0</div>
+    <p class="small">Идеи для добавления: термопары (тип K/J — аппроксимации NIST), расчёт барьеров искробезопасности, подбор AI/AO модулей по нагрузочной способности, проверка EMC/экранировки и падения напряжения для 24 В DC.
+    </p>
+  </section>
+
+  <script>
+    const fmt=(v,d=3)=>Number(v).toFixed(d);
+
+    // 1) 4–20 мА скалирование
+    function calcMA(){
+      const Emin=parseFloat(engMin.value||0), Emax=parseFloat(engMax.value||100);
+      const mA=parseFloat(mAin.value||12), Eng=parseFloat(engin.value||50);
+      // mA -> Eng
+      const EngFrommA = Emin + ( (mA-4)/(16) ) * (Emax-Emin);
+      // Eng -> mA
+      const mAFromEng = 4 + ( (Eng-Emin)/(Emax-Emin) ) * 16;
+      ma_out.innerHTML = `mA→Eng:  ${fmt(EngFrommA,3)}\nEng→mA:  ${fmt(mAFromEng,3)} мА`;
+    }
+
+    // 2) Шунт
+    function calcShunt(){
+      const U=parseFloat(sh_vfs.value||5), I_mA=parseFloat(sh_ifull.value||20);
+      const I=I_mA/1000.0; // A
+      const R=U/I; // Ом
+      const P=Math.pow(I,2)*R; // Вт
+      // напряжение на 4 мА
+      const U4 = R*(4/1000);
+      sh_out.innerHTML = `Rш = ${fmt(R,2)} Ом\nP20мА = ${fmt(P,3)} Вт (рекомендуемый номинал ≥ ${fmt(P*1.5,3)} Вт)\nU при 4 мА ≈ ${fmt(U4,3)} В`;
+    }
+
+    // 3) Проверка петли
+    function calcLoop(){
+      const Vs=parseFloat(lp_Vs.value||24);
+      const I_mA=parseFloat(lp_I.value||20); const I=I_mA/1000.0;
+      const Vtx=parseFloat(lp_tx.value||12), Vrx=parseFloat(lp_rx.value||5);
+      const L=parseFloat(lp_len.value||0); const Rkm=parseFloat(lp_Rkm.value||22); // Ом/км
+      const Rline = (2*L/1000.0)*Rkm; // два проводника
+      const Vline = I*Rline;
+      const Vneed = Vtx + Vrx + Vline;
+      const margin = Vs - Vneed;
+      const status = margin>=2? 'ОК (запас >2В)': (margin>=0?'На грани':'Недостаточно');
+      lp_out.innerHTML = `Rкабеля ≈ ${fmt(Rline,3)} Ом\nПадение на кабеле: ${fmt(Vline,3)} В\nТребуется всего: ${fmt(Vneed,3)} В\nИсточник: ${fmt(Vs,3)} В\nИтог: ${status}`;
+    }
+
+    // 4) PT100 IEC 60751 (0..850 °C)
+    function calcPT100(){
+      const R0=100, A=3.9083e-3, B=-5.775e-7; // для 0..850 °C
+      const t=parseFloat(pt_T.value||0);
+      const R = R0*(1 + A*t + B*t*t);
+
+      const Rval=parseFloat(pt_R.value||100);
+      // Решаем B*t^2 + A*t + (1 - R/R0) = 0
+      const c = 1 - (Rval/R0);
+      const D = A*A - 4*B*c;
+      let t_from_R = NaN;
+      if(D>=0){
+        const t1 = (-A + Math.sqrt(D))/(2*B);
+        const t2 = (-A - Math.sqrt(D))/(2*B);
+        // для 0..850 обычно физически корректен меньший по модулю положительный корень
+        t_from_R = [t1,t2].filter(x=>x>=-50 && x<=850).sort((a,b)=>Math.abs(a)-Math.abs(b))[0];
+      }
+      pt_out.innerHTML = `R(Т=${fmt(t,2)}°C) ≈ ${fmt(R,3)} Ом\nT(R=${fmt(Rval,3)} Ом) ≈ ${isNaN(t_from_R)?'н/д (вне области 0..850°C)':fmt(t_from_R,2)+' °C'}`;
+    }
+
+    // 5) 0–10 В
+    function parseRange(s){
+      // ожидается формат "a..b"
+      if(!s) return [0,100];
+      const parts = s.split('..').map(x=>parseFloat(x));
+      if(parts.length!==2 || parts.some(isNaN)) return [0,100];
+      return parts;
+    }
+    function calcVolt(){
+      const Uin=parseFloat(v_in.value||0);
+      const [Emin,Emax]=parseRange(v_eng.value);
+      const Eng = Emin + (Uin/10)*(Emax-Emin);
+      const mA = 4 + (Uin/10)*16; // если через преобразователь 0–10→4–20 линейно
+      v_out.innerText = `Eng(по 0–10В) = ${fmt(Eng,3)};  эквивалент току ≈ ${fmt(mA,3)} мА`;
+    }
+
+    // 6) PID Ziegler–Nichols
+    function calcPID(){
+      const Ku=parseFloat(pid_Ku.value||1), Tu=parseFloat(pid_Tu.value||1);
+      // Таблица ZN (реакция на колебания):
+      const P_Kp = 0.5*Ku;
+      const PI_Kp = 0.45*Ku, PI_Ti = Tu/1.2;
+      const PID_Kp = 0.6*Ku, PID_Ti = Tu/2, PID_Td = Tu/8;
+      pid_out.innerHTML = `P:   Kp=${fmt(P_Kp,3)}\nPI:  Kp=${fmt(PI_Kp,3)}, Ti=${fmt(PI_Ti,3)} с\nPID: Kp=${fmt(PID_Kp,3)}, Ti=${fmt(PID_Ti,3)} с, Td=${fmt(PID_Td,3)} с`;
+    }
+
+    // Авто-расчёты на загрузке
+    window.addEventListener('DOMContentLoaded',()=>{calcMA();calcShunt();calcLoop();calcPT100();calcVolt();calcPID();});
+  </script>
+</body>
+</html>

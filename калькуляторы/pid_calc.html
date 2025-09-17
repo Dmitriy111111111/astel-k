@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PID калькулятор (дискретный шаг)</title>
+<style>
+  :root { font-family: system-ui, Arial, sans-serif; }
+  body { max-width: 880px; margin: 24px auto; padding: 0 12px; }
+  h1 { font-size: 1.3rem; margin-bottom: 0.5rem; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(220px,1fr)); gap: 12px; }
+  label { display:block; font-size:.9rem; margin-bottom:4px; color:#333; }
+  input[type="number"] { width: 100%; padding: 8px; box-sizing: border-box; }
+  .card { border: 1px solid #ddd; border-radius: 10px; padding: 14px; }
+  .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+  .btn { padding: 10px 16px; border: 0; border-radius: 8px; background:#0d6efd; color:#fff; cursor:pointer; }
+  .btn.secondary { background:#6c757d; }
+  .out { font-family: ui-monospace, Consolas, monospace; background:#f7f7f7; padding:10px; border-radius:8px; }
+  details { margin-top: 14px; }
+</style>
+</head>
+<body>
+  <h1>PID калькулятор (дискретный шаг)</h1>
+
+  <div class="card">
+    <h3>Параметры ПИД</h3>
+    <div class="grid">
+      <div><label>Kp</label><input id="kp" type="number" step="any" value="1.0"></div>
+      <div><label>Ki (1/с)</label><input id="ki" type="number" step="any" value="0.0"></div>
+      <div><label>Kd (с)</label><input id="kd" type="number" step="any" value="0.0"></div>
+      <div><label>Δt (с)</label><input id="dt" type="number" step="any" value="0.1"></div>
+      <div><label>Мин. выход u<sub>min</sub></label><input id="umin" type="number" step="any" value="-100"></div>
+      <div><label>Макс. выход u<sub>max</sub></label><input id="umax" type="number" step="any" value="100"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Состояние и измерения</h3>
+    <div class="grid">
+      <div><label>Задание (SP)</label><input id="sp" type="number" step="any" value="10"></div>
+      <div><label>Текущее значение (PV)</label><input id="pv" type="number" step="any" value="0"></div>
+      <div><label>Пред. ошибка e<sub>prev</sub></label><input id="ePrev" type="number" step="any" value="0"></div>
+      <div><label>Интеграл ∫e dt</label><input id="iTerm" type="number" step="any" value="0"></div>
+      <div><label>Вкл. антивинд-ап (замораживать интеграл при насыщении)</label>
+        <input id="antiwindup" type="checkbox" checked></div>
+    </div>
+    <div class="row" style="margin-top:10px;">
+      <button class="btn" id="stepBtn">Рассчитать следующий шаг</button>
+      <button class="btn secondary" id="resetBtn">Сброс (обнулить e<sub>prev</sub> и интеграл)</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Результат</h3>
+    <div class="out" id="outBox">Нажмите “Рассчитать следующий шаг”.</div>
+  </div>
+
+  <details class="card">
+    <summary><b>Быстрая настройка по Зиглеру–Николсу (опционально)</b></summary>
+    <p>Если известны критический коэффициент усиления <i>K<sub>u</sub></i> и период колебаний <i>T<sub>u</sub></i>, можно оценить ПИД:</p>
+    <div class="grid">
+      <div><label>K<sub>u</sub></label><input id="ku" type="number" step="any" value="2.0"></div>
+      <div><label>T<sub>u</sub> (с)</label><input id="tu" type="number" step="any" value="1.0"></div>
+    </div>
+    <div class="row" style="margin-top:10px;">
+      <button class="btn" id="znPid">Подставить PID (ZN классика)</button>
+      <button class="btn secondary" id="znPi">Подставить PI (ZN)</button>
+    </div>
+    <p style="font-size:.9rem;color:#555;">Формулы (ZN): PID → Kp=0.6Ku, Ti=0.5Tu, Td=0.125Tu; PI → Kp=0.45Ku, Ti=0.833Tu. В калькуляторе используется Ki=Kp/Ti, Kd=Kp·Td.</p>
+  </details>
+
+<script>
+function clamp(v, lo, hi){ return Math.min(Math.max(v, lo), hi); }
+
+function readNum(id){ return parseFloat(document.getElementById(id).value || 0); }
+function writeNum(id, v){ document.getElementById(id).value = Number.isFinite(v)? String(v) : ""; }
+
+function stepPID(){
+  const Kp=readNum('kp'), Ki=readNum('ki'), Kd=readNum('kd');
+  const dt=readNum('dt'), umin=readNum('umin'), umax=readNum('umax');
+  const sp=readNum('sp'), pv=readNum('pv');
+  let ePrev=readNum('ePrev'), iTerm=readNum('iTerm');
+  const antiwindup=document.getElementById('antiwindup').checked;
+
+  if(dt<=0){ return printOut("Ошибка: Δt должно быть > 0"); }
+
+  // Текущая ошибка
+  const e = sp - pv;
+
+  // Интегральная составляющая (накапливаем)
+  let iTermNew = iTerm + e * dt;
+
+  // Производная (по ошибке)
+  const de = (e - ePrev) / dt;
+
+  // Несатурированный выход
+  let u = Kp*e + Ki*iTermNew + Kd*de;
+
+  // Ограничение
+  const uClamped = clamp(u, umin, umax);
+
+  // Антивинд-ап: если сработало насыщение и направление интеграла ухудшает насыщение — откатываем интеграл
+  if (antiwindup && u !== uClamped){
+    // Простая схема: не обновляем интеграл при насыщении
+    iTermNew = iTerm;
+    // Пересчитать u с «замороженным» интегралом
+    u = Kp*e + Ki*iTermNew + Kd*de;
+  }
+
+  // Итог: применяем к выходу кламп
+  const uOut = clamp(u, umin, umax);
+
+  // Запись нового состояния
+  writeNum('ePrev', e);
+  writeNum('iTerm', iTermNew);
+
+  // Вывод
+  const txt =
+`e = SP - PV = ${sp} - ${pv} = ${e.toFixed(6)}
+P = Kp*e = ${Kp}×${e.toFixed(6)} = ${(Kp*e).toFixed(6)}
+I = Ki*∫e dt = ${Ki}×${iTermNew.toFixed(6)} = ${(Ki*iTermNew).toFixed(6)}
+D = Kd*de/dt = ${Kd}×${de.toFixed(6)} = ${(Kd*de).toFixed(6)}
+u (до ограничений) = ${(u).toFixed(6)}
+u ∈ [${umin}, ${umax}] → u = ${uOut.toFixed(6)}
+
+Состояние на следующий шаг:
+e_prev = ${e.toFixed(6)},  ∫e dt = ${iTermNew.toFixed(6)}`;
+  printOut(txt);
+}
+
+function printOut(s){ document.getElementById('outBox').textContent = s; }
+
+document.getElementById('stepBtn').addEventListener('click', stepPID);
+document.getElementById('resetBtn').addEventListener('click', ()=>{
+  writeNum('ePrev', 0);
+  writeNum('iTerm', 0);
+  printOut('Сброшено. Введите PV/SP и нажмите «Рассчитать следующий шаг».');
+});
+
+document.getElementById('znPid').addEventListener('click', ()=>{
+  const Ku=readNum('ku'), Tu=readNum('tu');
+  if(Tu<=0 || Ku<=0){ return printOut('ZN: Ku и Tu должны быть > 0'); }
+  const Kp=0.6*Ku, Ti=0.5*Tu, Td=0.125*Tu;
+  const Ki=Kp/Ti, Kd=Kp*Td;
+  writeNum('kp', Kp); writeNum('ki', Ki); writeNum('kd', Kd);
+  printOut(`ZN PID: Kp=${Kp.toFixed(6)}, Ki=${Ki.toFixed(6)}, Kd=${Kd.toFixed(6)} (Ti=${Ti.toFixed(6)}, Td=${Td.toFixed(6)})`);
+});
+
+document.getElementById('znPi').addEventListener('click', ()=>{
+  const Ku=readNum('ku'), Tu=readNum('tu');
+  if(Tu<=0 || Ku<=0){ return printOut('ZN: Ku и Tu должны быть > 0'); }
+  const Kp=0.45*Ku, Ti=0.833*Tu;
+  const Ki=Kp/Ti, Kd=0;
+  writeNum('kp', Kp); writeNum('ki', Ki); writeNum('kd', Kd);
+  printOut(`ZN PI: Kp=${Kp.toFixed(6)}, Ki=${Ki.toFixed(6)}, Kd=0 (Ti=${Ti.toFixed(6)})`);
+});
+</script>
+</body>
+</html>

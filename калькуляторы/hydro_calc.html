@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Гидравлический калькулятор (Дарси—Вейсбах)</title>
+<style>
+  :root{--bg:#0b0c10;--fg:#e8e8e8;--muted:#a3a9b2;--card:#151820;--line:#243040;--accent:#4e9af1}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Arial}
+  .wrap{max-width:1040px;margin:28px auto;padding:0 14px}
+  h1{font-size:1.45rem;margin:6px 0 14px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:0 6px 24px rgba(0,0,0,.25)}
+  label{display:block;margin-bottom:6px;color:var(--muted)}
+  input,select{width:100%;padding:10px 12px;border:1px solid #2b3240;border-radius:10px;background:#0e1118;color:var(--fg)}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .btn{padding:10px 14px;border:0;border-radius:10px;background:var(--accent);color:#fff;cursor:pointer}
+  .mono{font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace}
+  .muted{color:var(--muted)}
+  .small{font-size:.9rem}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  @media (max-width:720px){.two{grid-template-columns:1fr}}
+  .out p{margin:.4rem 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Гидравлический калькулятор (Дарси—Вейсбах) — трубы круглого сечения</h1>
+
+  <div class="card">
+    <div class="grid">
+      <div>
+        <label>Материал / шероховатость ε, мм</label>
+        <div class="two">
+          <select id="mat">
+            <option value="0.0015">Пластик (PE/PVC) ≈ 0.0015</option>
+            <option value="0.007">Медь ≈ 0.007</option>
+            <option value="0.046">Сталь новая ≈ 0.046</option>
+            <option value="0.2">Сталь старая ≈ 0.2</option>
+            <option value="0.26">Чугун ≈ 0.26</option>
+            <option value="custom">Другое (ввести)</option>
+          </select>
+          <input id="eps" type="number" step="any" value="0.0015" title="ε, мм" />
+        </div>
+        <div class="small muted">ε — абсолютная шероховатость внутренней поверхности (мм). Для расчёта переводится в метры.</div>
+      </div>
+      <div>
+        <label>Внутренний диаметр D, мм</label>
+        <input id="D" type="number" step="any" value="50">
+      </div>
+      <div>
+        <label>Длина участка L, м</label>
+        <input id="L" type="number" step="any" value="30">
+      </div>
+      <div>
+        <label>Суммарные местные сопротивления ΣK (безразм.)</label>
+        <input id="Ksum" type="number" step="any" value="2.5">
+        <div class="small muted">Отводы, тройники, вентили и т.п. Суммируйте коэффициенты.</div>
+      </div>
+      <div>
+        <label>Расход Q, м³/ч (или скорость)</label>
+        <input id="Q" type="number" step="any" value="5.0">
+      </div>
+      <div>
+        <label>Или скорость v, м/с (пересчитывается)</label>
+        <input id="v" type="number" step="any" value="">
+      </div>
+      <div>
+        <label>Плотность ρ, кг/м³</label>
+        <input id="rho" type="number" step="any" value="998">
+      </div>
+      <div>
+        <label>Динамическая вязкость μ, Па·с</label>
+        <input id="mu" type="number" step="any" value="0.001">
+        <div class="small muted">Вода 20 °C ≈ 0.001 Па·с, ρ≈998 кг/м³</div>
+      </div>
+      <div>
+        <label>Перепад геодезических отметок (подъём +), м</label>
+        <input id="dh" type="number" step="any" value="0">
+      </div>
+      <div>
+        <label>КПД насоса η (0–1) для оценки мощности</label>
+        <input id="eta" type="number" step="any" value="0.6">
+      </div>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <button class="btn" id="calc">Рассчитать</button>
+      <span class="muted">Формулы: Дарси—Вейсбах, Re, f: ламинарный 64/Re, турбулентный — Хааланд</span>
+    </div>
+  </div>
+
+  <div class="card out" id="out">
+    <p class="muted">Заполните поля и нажмите «Рассчитать».</p>
+  </div>
+
+  <div class="card small">
+    <details>
+      <summary><b>Подсказки по нормальным скоростям</b></summary>
+      <ul>
+        <li>ХВС/ГВС: 0.6–1.5 м/с (обычно 0.8–1.2)</li>
+        <li>Теплосети: 1.0–2.5 м/с</li>
+        <li>Технологические воды: 1.0–3.0 м/с</li>
+      </ul>
+    </details>
+  </div>
+</div>
+
+<script>
+const g = 9.81; // м/с²
+function toNumber(id){ return parseFloat(document.getElementById(id).value || '0'); }
+function setNumber(id, val){ document.getElementById(id).value = Number.isFinite(val) ? String(val) : ''; }
+function areaFromD(Dm){ return Math.PI * (Dm**2) / 4; }
+function reynolds(rho, v, Dm, mu){ return rho * v * Dm / mu; }
+function frictionFactor(Re, eps, Dm){
+  if (Re < 1e-12) return NaN;
+  if (Re < 2300) return 64 / Re; // ламинарный режим
+  // Хааланд: 1/sqrt(f) = -1.8 log10( ( (eps/D)/3.7 )^1.11 + 6.9/Re )
+  const term = Math.pow((eps/Dm)/3.7, 1.11) + 6.9/Re;
+  const invSqrtF = -1.8 * Math.log10(term);
+  return 1 / (invSqrtF * invSqrtF);
+}
+function headLossFriction(f, L, Dm, v){ return f * (L/Dm) * (v*v) / (2*g); }
+function headLossMinor(Ksum, v){ return Ksum * (v*v) / (2*g); }
+
+// Справочные пресеты воды (ρ, μ) по температуре
+const waterTable = {
+  5:{rho:1000, mu:0.00152},
+  10:{rho:999.7, mu:0.00131},
+  15:{rho:999.1, mu:0.00114},
+  20:{rho:998, mu:0.00100},
+  30:{rho:995.7, mu:0.00080},
+  40:{rho:992.2, mu:0.00065},
+  60:{rho:983.2, mu:0.00047},
+  80:{rho:971.8, mu:0.00036}
+};
+
+// Синхронизация поля ε при выборе материала
+const matSel = document.getElementById('mat');
+const epsInput = document.getElementById('eps');
+matSel.addEventListener('change', ()=>{
+  const v = matSel.value;
+  if (v === 'custom') { epsInput.focus(); return; }
+  epsInput.value = v; // мм
+});
+
+// Взаимный пересчёт Q↔v при вводе одного из полей
+(function bindQv(){
+  const D = document.getElementById('D');
+  const Q = document.getElementById('Q');
+  const v = document.getElementById('v');
+  function recalc(from){
+    const Dm = toNumber('D')/1000; if(!Dm){ v.value=''; return; }
+    const A = areaFromD(Dm);
+    if(from==='Q'){
+      const Qm3s = toNumber('Q')/3600; // м³/с
+      setNumber('v', Qm3s/A);
+    } else if(from==='v'){
+      const vm = toNumber('v');
+      setNumber('Q', vm*A*3600);
+    }
+  }
+  Q.addEventListener('input', ()=>recalc('Q'));
+  v.addEventListener('input', ()=>recalc('v'));
+  D.addEventListener('input', ()=>recalc('Q'));
+})();
+
+function fmt(x, digits=6){
+  if(!Number.isFinite(x)) return '—';
+  const abs=Math.abs(x);
+  if(abs!==0 && (abs<1e-4 || abs>=1e6)) return x.toExponential(6);
+  return x.toLocaleString('ru-RU', {maximumFractionDigits: digits});
+}
+
+function calc(){
+  const Dm = toNumber('D')/1000; // м
+  const L = toNumber('L');
+  const Ksum = toNumber('Ksum');
+  const Q_m3h = toNumber('Q');
+  let v = toNumber('v');
+  const rho = toNumber('rho');
+  const mu = toNumber('mu');
+  const eps_m = toNumber('eps')/1000; // мм → м
+  const dh = toNumber('dh');
+  const eta = Math.max(0.01, Math.min(0.99, toNumber('eta') || 0.6));
+  if(!Dm || (!Q_m3h && !v)) { document.getElementById('out').innerHTML = '<p>Укажите диаметр и расход/скорость.</p>'; return; }
+
+  const A = areaFromD(Dm);
+  if(!v){ v = (Q_m3h/3600)/A; }
+  const Q_m3s = v*A;
+  const Re = reynolds(rho, v, Dm, mu);
+  const f = frictionFactor(Re, eps_m, Dm);
+  const hf = headLossFriction(f, L, Dm, v);
+  const hminor = headLossMinor(Ksum, v);
+  const htot = hf + hminor + dh; // полный напор, м
+  const dp = rho * g * htot; // Па
+  const P_hyd = dp * Q_m3s; // гидравлическая мощность, Вт
+  const P_pump = P_hyd / eta; // требуемая на валу насоса
+
+  const regime = Re<2300? 'ламинарный' : (Re>4000? 'турбулентный' : 'переходный');
+
+  document.getElementById('out').innerHTML = `
+    <p><b>Основные результаты</b></p>
+    <p class="mono">v = ${fmt(v,4)} м/с,  Q = ${fmt(Q_m3s*3600,4)} м³/ч</p>
+    <p class="mono">Re = ${fmt(Re,0)} (${regime}),  f = ${fmt(f,6)}</p>
+    <p class="mono">Потери напора: трение h_f = ${fmt(hf,4)} м, местные h_m = ${fmt(hminor,4)} м</p>
+    <p class="mono">Итого напор h_tot = ${fmt(htot,4)} м  →  Δp = ${fmt(dp,2)} Па (${fmt(dp/1e5,4)} бар)</p>
+    <p class="mono">Мощность: гидравл. ${fmt(P_hyd,2)} Вт  →  насос (η=${fmt(eta,2)}) ≈ <b>${fmt(P_pump,2)} Вт</b></p>
+    <hr style="border-color:#223"/>
+    <p class="small muted">Формулы: Darcy–Weisbach h_f = f·(L/D)·v²/(2g); Re = ρvD/μ; f = 64/Re (ламинарный) или по Хааланду для турбулентного режима.</p>`;
+}
+
+document.getElementById('calc').addEventListener('click', calc);
+
+// Быстрые кнопки воды по температуре (опционально): добавляем под вязкостью
+(function addWaterShortcuts(){
+  const container = document.getElementById('mu').parentElement;
+  const row = document.createElement('div');
+  row.className = 'row small';
+  row.style.marginTop = '6px';
+  row.innerHTML = '<span class="muted">Вода, °C: </span>' +
+    Object.keys(waterTable).map(t=>`<button class="btn" data-t="${t}" style="padding:6px 10px">${t}</button>`).join(' ');
+  container.appendChild(row);
+  row.querySelectorAll('button').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      const t = b.dataset.t;
+      setNumber('rho', waterTable[t].rho);
+      setNumber('mu', waterTable[t].mu);
+    });
+  });
+})();
+</script>
+</body>
+</html>

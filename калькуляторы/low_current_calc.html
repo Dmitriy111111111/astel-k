@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Калькулятор для слаботочных сетей</title>
+  <style>
+    :root{
+      --bg:#0f172a;/* slate-900 */
+      --card:#111827;/* gray-900 */
+      --muted:#94a3b8;/* slate-400 */
+      --accent:#22d3ee;/* cyan-400 */
+      --ok:#22c55e;/* green-500 */
+      --warn:#f59e0b;/* amber-500 */
+      --bad:#ef4444;/* red-500 */
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Inter,Arial,sans-serif;background:linear-gradient(180deg,#0b1022, #0f172a);color:#e5e7eb}
+    header{padding:24px 16px;text-align:center}
+    header h1{margin:0;font-size:28px;letter-spacing:.3px}
+    header p{margin:6px 0 0;color:var(--muted)}
+
+    .container{max-width:1100px;margin:0 auto;padding:16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px}
+    .card{background:rgba(17,24,39,.75);backdrop-filter:saturate(140%) blur(6px);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:16px;box-shadow:0 10px 24px rgba(0,0,0,.35)}
+    .card h2{margin:0 0 10px;font-size:18px}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:8px 0}
+    .row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:8px 0}
+    label{font-size:12px;color:var(--muted)}
+    input,select{width:100%;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.08);background:#0b1220;color:#e5e7eb;outline:none}
+    input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(34,211,238,.15)}
+    .out{margin-top:10px;padding:10px;border-radius:12px;background:#0b1220;border:1px dashed rgba(255,255,255,.08);font-variant-numeric:tabular-nums}
+    .muted{color:var(--muted);font-size:12px}
+    .pill{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.12);font-size:12px;color:#cbd5e1}
+    .ok{color:var(--ok)}.warn{color:var(--warn)}.bad{color:var(--bad)}
+    .small{font-size:12px}
+    .footer{max-width:1100px;margin:24px auto 40px;color:var(--muted);padding:0 16px}
+    .btn{display:inline-block;margin-top:8px;padding:8px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.12);cursor:pointer;background:#0b1220;color:#e5e7eb}
+    .btn:hover{border-color:var(--accent)}
+    .gridgap{gap:14px}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Калькулятор для слаботочных сетей</h1>
+    <p>PoE бюджет · Падение напряжения · АКБ/ИБП · Оптический бюджет · Видеонаблюдение/архив</p>
+  </header>
+
+  <main class="container">
+    <!-- 1) PoE БЮДЖЕТ -->
+    <section class="card" id="poe">
+      <h2>PoE бюджет</h2>
+      <div class="row">
+        <div>
+          <label>Бюджет коммутатора, Вт</label>
+          <input type="number" id="poe_switch_budget" value="250" min="0" step="1" />
+        </div>
+        <div>
+          <label>КПД подачи (потери в линиях), %</label>
+          <input type="number" id="poe_eff" value="90" min="50" max="100" step="1" />
+        </div>
+      </div>
+      <div class="row gridgap">
+        <div>
+          <label>Класс 802.3af (до 15.4W) — кол-во</label>
+          <input type="number" id="poe_af" value="4" min="0" step="1">
+        </div>
+        <div>
+          <label>802.3at (до 30W) — кол-во</label>
+          <input type="number" id="poe_at" value="6" min="0" step="1">
+        </div>
+      </div>
+      <div class="row gridgap">
+        <div>
+          <label>802.3bt (до 60W) — кол-во</label>
+          <input type="number" id="poe_bt3" value="0" min="0" step="1">
+        </div>
+        <div>
+          <label>802.3bt (до 90W) — кол-во</label>
+          <input type="number" id="poe_bt4" value="0" min="0" step="1">
+        </div>
+      </div>
+      <button class="btn" onclick="calcPoE()">Рассчитать</button>
+      <div class="out" id="poe_out"></div>
+      <p class="muted small">Примечание: учтена подача на устройства (PD). Фактическое потребление может быть меньше максимума по стандарту.</p>
+    </section>
+
+    <!-- 2) ПАДЕНИЕ НАПРЯЖЕНИЯ DC -->
+    <section class="card" id="vdrop">
+      <h2>Падение напряжения (DC)</h2>
+      <div class="row">
+        <div>
+          <label>Номинальное напряжение, В</label>
+          <select id="vd_v">
+            <option value="12">12</option>
+            <option value="24" selected>24</option>
+            <option value="48">48</option>
+          </select>
+        </div>
+        <div>
+          <label>Ток нагрузки, А</label>
+          <input type="number" id="vd_i" value="1.5" min="0" step="0.01">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Длина линии (одна сторона), м</label>
+          <input type="number" id="vd_len" value="50" min="0" step="1">
+        </div>
+        <div>
+          <label>Сечение жилы, мм²</label>
+          <input type="number" id="vd_s" value="1.5" min="0.1" step="0.1">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Материал</label>
+          <select id="vd_mat">
+            <option value="cu" selected>Медь</option>
+            <option value="al">Алюминий</option>
+          </select>
+        </div>
+        <div>
+          <label>Допустимое падение, %</label>
+          <input type="number" id="vd_pct" value="3" min="1" step="0.5">
+        </div>
+      </div>
+      <button class="btn" onclick="calcVdrop()">Рассчитать</button>
+      <div class="out" id="vd_out"></div>
+      <p class="muted small">Расчёт по формуле ΔU = I · ρ · 2L / S, где ρ (медь) ≈ 0.0175 Ω·мм²/м, (алюминий) ≈ 0.0282 Ω·мм²/м.</p>
+    </section>
+
+    <!-- 3) АКБ / ИБП -->
+    <section class="card" id="ups">
+      <h2>Ёмкость АКБ / ИБП</h2>
+      <div class="row">
+        <div>
+          <label>Нагрузка, Вт</label>
+          <input type="number" id="ups_w" value="120" min="0" step="1">
+        </div>
+        <div>
+          <label>Время автономии, ч</label>
+          <input type="number" id="ups_h" value="4" min="0.1" step="0.1">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Системное напряжение, В</label>
+          <select id="ups_v">
+            <option value="12">12</option>
+            <option value="24" selected>24</option>
+            <option value="48">48</option>
+          </select>
+        </div>
+        <div>
+          <label>КПД инвертора, %</label>
+          <input type="number" id="ups_eff" value="90" min="50" max="100" step="1">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Глубина разряда (DoD), %</label>
+          <input type="number" id="ups_dod" value="70" min="10" max="100" step="1">
+        </div>
+        <div>
+          <label>Темп. коэффициент (корр.), %</label>
+          <input type="number" id="ups_temp" value="90" min="50" max="110" step="1">
+        </div>
+      </div>
+      <button class="btn" onclick="calcUPS()">Рассчитать</button>
+      <div class="out" id="ups_out"></div>
+      <p class="muted small">Формула: C<sub>Ah</sub> = (P · t) / (V · η · DoD · k), где η, DoD, k — доли (0–1).</p>
+    </section>
+
+    <!-- 4) ОПТИЧЕСКИЙ БЮДЖЕТ -->
+    <section class="card" id="optical">
+      <h2>Оптический бюджет</h2>
+      <div class="row">
+        <div>
+          <label>Мощность передатчика, dBm</label>
+          <input type="number" id="opt_tx" value="0" step="0.1">
+        </div>
+        <div>
+          <label>Чувствит. приёмника, dBm</label>
+          <input type="number" id="opt_rx" value="-20" step="0.1">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Длина волокна, км</label>
+          <input type="number" id="opt_len" value="5" min="0" step="0.1">
+        </div>
+        <div>
+          <label>Затухание волокна, дБ/км</label>
+          <input type="number" id="opt_att" value="0.35" step="0.01">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Стыки (сплайсы), шт</label>
+          <input type="number" id="opt_splice" value="4" min="0" step="1">
+        </div>
+        <div>
+          <label>Потеря на стык, дБ</label>
+          <input type="number" id="opt_splice_loss" value="0.1" step="0.01">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Коннекторы, шт</label>
+          <input type="number" id="opt_conn" value="4" min="0" step="1">
+        </div>
+        <div>
+          <label>Потеря на коннектор, дБ</label>
+          <input type="number" id="opt_conn_loss" value="0.3" step="0.01">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Запас (margin), дБ</label>
+          <input type="number" id="opt_margin" value="3" step="0.1">
+        </div>
+        <div>
+          <label>Доп. потери, дБ</label>
+          <input type="number" id="opt_extra" value="0" step="0.1">
+        </div>
+      </div>
+      <button class="btn" onclick="calcOptical()">Рассчитать</button>
+      <div class="out" id="opt_out"></div>
+      <p class="muted small">Проверка: Tx − (потери волокна + стыков + коннекторов + margin + прочие) ≥ Sensitivity.</p>
+    </section>
+
+    <!-- 5) ВИДЕОНАБЛЮДЕНИЕ: ПРОПУСКНАЯ и АРХИВ -->
+    <section class="card" id="vss">
+      <h2>Видеонаблюдение: поток и архив</h2>
+      <div class="row">
+        <div>
+          <label>Кол-во камер, шт</label>
+          <input type="number" id="cam_n" value="16" min="1" step="1">
+        </div>
+        <div>
+          <label>Битрейт на камеру, Мбит/с</label>
+          <input type="number" id="cam_bitrate" value="6" min="0.1" step="0.1">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Часов записи в сутки</label>
+          <input type="number" id="cam_hours" value="24" min="0.1" step="0.1">
+        </div>
+        <div>
+          <label>Срок хранения, дней</label>
+          <input type="number" id="cam_days" value="30" min="1" step="1">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Доля движения (Motion), %</label>
+          <input type="number" id="cam_motion" value="70" min="1" max="100" step="1">
+        </div>
+        <div>
+          <label>Накладные (RAID/файловая), %</label>
+          <input type="number" id="cam_over" value="10" min="0" step="1">
+        </div>
+      </div>
+      <button class="btn" onclick="calcVSS()">Рассчитать</button>
+      <div class="out" id="cam_out"></div>
+      <p class="muted small">Приближённая оценка. Для точного расчёта используйте реальные профили битрейта камер и кодеков (H.264/H.265/SmartCodec).</p>
+    </section>
+  </main>
+
+  <section class="footer">
+    <div class="pill">v1.0</div>
+    <p class="small">Сделано для внутренних расчётов АСУ/ИТ. Добавить блоки: бюджет питания 12/24/48В, подбор ИБП по аккумуляторам, длина PoE по кабелю, и т.д.</p>
+  </section>
+
+  <script>
+    // ---------- helpers ----------
+    const num = (elId) => parseFloat(document.getElementById(elId).value || '0');
+    const fmt = (v, digits=2) => Number(v).toFixed(digits);
+
+    // ---------- 1) PoE ----------
+    function calcPoE(){
+      const budget = num('poe_switch_budget');
+      const eff = num('poe_eff')/100; // подаётся в долях
+      const n_af = num('poe_af');
+      const n_at = num('poe_at');
+      const n_bt3 = num('poe_bt3');
+      const n_bt4 = num('poe_bt4');
+
+      // Максимумы по стандарту на порт (выделение со стороны PSE)
+      const P_af = 15.4; // 802.3af
+      const P_at = 30.0; // 802.3at (PoE+)
+      const P_bt3 = 60.0; // 802.3bt Type 3
+      const P_bt4 = 90.0; // 802.3bt Type 4
+
+      const required_PD = n_af*P_af + n_at*P_at + n_bt3*P_bt3 + n_bt4*P_bt4; // на устройства
+      const required_PSE = required_PD/eff; // с учётом потерь/КПД
+      const spare = budget - required_PSE;
+
+      let status = '<span class="ok">ОК</span>'; let note='Бюджета достаточно.';
+      if (spare < 0 && spare > -0.1) { // почти ноль
+        status = '<span class="warn">На грани</span>'; note = 'Бюджет на пределе — рекомендуем запас 10–20%.';
+      } else if (spare < -0.1){
+        status = '<span class="bad">Недостаточно</span>'; note='Требуется больший PoE бюджет или снизить нагрузку.';
+      }
+
+      document.getElementById('poe_out').innerHTML = `
+        Требуется на PD: <b>${fmt(required_PD)} Вт</b><br>
+        Эквивалент у PSE (с учётом КПД): <b>${fmt(required_PSE)} Вт</b><br>
+        Бюджет коммутатора: <b>${fmt(budget)} Вт</b><br>
+        Резерв: <b>${fmt(spare)} Вт</b> — ${status}<br>
+        <span class="muted small">${note}</span>
+      `;
+    }
+
+    // ---------- 2) Voltage Drop DC ----------
+    function calcVdrop(){
+      const U = num('vd_v');
+      const I = num('vd_i');
+      const L = num('vd_len'); // одна сторона
+      const S = num('vd_s');
+      const mat = document.getElementById('vd_mat').value;
+      const pct_allow = num('vd_pct');
+
+      const rho = (mat === 'cu') ? 0.0175 : 0.0282; // Ω·мм²/м
+      const R = rho * (2*L) / S; // Ом
+      const dU = I * R; // В
+      const dU_pct = (dU / U) * 100.0;
+      const U_load = U - dU;
+
+      let status = 'ok';
+      if (dU_pct > pct_allow && dU_pct <= pct_allow*1.5) status = 'warn';
+      if (dU_pct > pct_allow*1.5) status = 'bad';
+
+      const badge = status==='ok' ? 'ОК' : (status==='warn' ? 'На грани' : 'Выше нормы');
+      const cls = status==='ok' ? 'ok' : (status==='warn' ? 'warn' : 'bad');
+
+      document.getElementById('vd_out').innerHTML = `
+        R линии: <b>${fmt(R,4)} Ω</b><br>
+        Падение напряжения: <b>${fmt(dU,3)} В</b> (<b>${fmt(dU_pct,2)}%</b>) — <span class="${cls}">${badge}</span><br>
+        На нагрузке: <b>${fmt(U_load,3)} В</b><br>
+        Допустимое по норме: <b>${fmt(pct_allow,1)}%</b>
+      `;
+    }
+
+    // ---------- 3) UPS / Battery ----------
+    function calcUPS(){
+      const P = num('ups_w');
+      const t = num('ups_h');
+      const V = num('ups_v');
+      const eta = num('ups_eff')/100.0;
+      const DoD = num('ups_dod')/100.0; // максимально допустимая доля разряда
+      const k = num('ups_temp')/100.0; // температурный коэффициент (ёмкость при текущей t)
+
+      // C_Ah = (P * t) / (V * eta * DoD * k)
+      const C = (P * t) / (V * eta * DoD * k);
+      const I = P / (V * eta); // ток разряда при номинале (прибл.)
+
+      document.getElementById('ups_out').innerHTML = `
+        Требуемая ёмкость: <b>${fmt(C,1)} А·ч</b><br>
+        Оценочный ток разряда: <b>${fmt(I,2)} А</b><br>
+        Рекомендуется запас 15–30% и проверка по паспортным кривым АКБ.
+      `;
+    }
+
+    // ---------- 4) Optical Link Budget ----------
+    function calcOptical(){
+      const Tx = num('opt_tx'); // dBm
+      const Rx = num('opt_rx'); // dBm (отрицательное)
+      const L = num('opt_len'); // km
+      const a = num('opt_att'); // dB/km
+      const ns = num('opt_splice');
+      const ls = num('opt_splice_loss');
+      const nc = num('opt_conn');
+      const lc = num('opt_conn_loss');
+      const m = num('opt_margin');
+      const extra = num('opt_extra');
+
+      const fiberLoss = L * a;
+      const spliceLoss = ns * ls;
+      const connLoss = nc * lc;
+      const totalLoss = fiberLoss + spliceLoss + connLoss + m + extra;
+
+      const recvLevel = Tx - (totalLoss); // ожидаемый уровень на приёмнике, dBm
+      const marginToSens = recvLevel - Rx; // запас к чувствительности, dB
+
+      const cls = marginToSens >= 0 ? 'ok' : (marginToSens > -3 ? 'warn' : 'bad');
+      const badge = marginToSens >= 0 ? 'ОК' : (marginToSens > -3 ? 'На грани' : 'Недостаточно');
+
+      document.getElementById('opt_out').innerHTML = `
+        Суммарные потери линии: <b>${fmt(totalLoss,2)} дБ</b> (волокно ${fmt(fiberLoss,2)} · стыки ${fmt(spliceLoss,2)} · коннекторы ${fmt(connLoss,2)} · запас ${fmt(m,2)} · прочее ${fmt(extra,2)})<br>
+        Ожидаемый уровень на Rx: <b>${fmt(recvLevel,2)} dBm</b><br>
+        Запас к чувствительности: <b class="${cls}">${fmt(marginToSens,2)} дБ</b> — <span class="${cls}">${badge}</span>
+      `;
+    }
+
+    // ---------- 5) CCTV Bandwidth & Storage ----------
+    function calcVSS(){
+      const N = num('cam_n');
+      const br = num('cam_bitrate'); // Mbps per camera
+      const hours = num('cam_hours');
+      const days = num('cam_days');
+      const motion = num('cam_motion')/100.0; // доля времени, когда есть запись
+      const over = 1 + (num('cam_over')/100.0); // накладные
+
+      const totalMbps = N * br * motion; // усреднённый поток
+      const totalMBps = totalMbps / 8.0; // MB/s
+      const bytesPerDay = totalMBps * 1024*1024 * 1024 * (24*60*60) / (1024*1024*1024); // через GiB эквивалент -> остаться в байтах сложно. Упростим: MB/s * 86400 = MB/day
+      // Пересчитаем аккуратнее без "летающих" единиц:
+      const MB_per_day = totalMBps * 86400; // MB/day
+      const TB_total = (MB_per_day * days * over) / (1e6); // 1e6 MB ≈ 1 TB (десятичный)
+
+      document.getElementById('cam_out').innerHTML = `
+        Суммарный поток: <b>${fmt(totalMbps,2)} Мбит/с</b> (~ ${fmt(totalMBps,2)} МБ/с)<br>
+        Архив на ${days} дн. при ${fmt(hours,1)} ч/сут и motion=${fmt(motion*100,0)}%: <b>${fmt(TB_total,2)} ТБ</b> (с учётом накладных ${fmt((over-1)*100,0)}%)
+      `;
+    }
+
+    // авто-инициализация предрасчётов
+    window.addEventListener('DOMContentLoaded', ()=>{ calcPoE(); calcVdrop(); calcUPS(); calcOptical(); calcVSS(); });
+  </script>
+</body>
+</html>

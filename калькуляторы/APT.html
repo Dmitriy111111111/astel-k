@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Калькулятор АПТ — газовое и водяное тушение</title>
+  <style>
+    :root{ --bg:#0b0f14; --card:#121821; --ink:#e6eef7; --muted:#a6b3c3; --acc:#ff8b64; --ring:rgba(255,139,100,.35); --danger:#ff6b6b; }
+    *{box-sizing:border-box}
+    body{margin:0; background:var(--bg); color:var(--ink); font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial}
+    .wrap{max-width:1200px; margin:0 auto; padding:24px}
+    h1{font-size:clamp(20px,3vw,32px); margin:0 0 10px}
+    p.lead{color:var(--muted); margin:0 0 18px}
+
+    .toolbar{position:sticky; top:0; z-index:30; background:linear-gradient(180deg,rgba(11,15,20,.95),rgba(11,15,20,.85)); border-bottom:1px solid #1b2533; backdrop-filter:blur(6px)}
+    .toolbar .wrap{display:flex; gap:8px; flex-wrap:wrap}
+    .btn{display:inline-flex; gap:6px; align-items:center; padding:9px 12px; border-radius:12px; border:1px solid #1f2a3b; background:#0f1722; color:var(--ink); text-decoration:none; cursor:pointer}
+    .btn:hover{border-color:#2b3b56}
+    .btn.primary{background:linear-gradient(180deg,#ffc2ad,#ff8b64); color:#3c160a; border-color:#cb6b4e}
+
+    .card{background:var(--card); border:1px solid #1b2533; border-radius:16px; padding:16px; box-shadow:0 6px 18px rgba(0,0,0,.25); margin:16px 0}
+    .card h2{margin:0 0 6px; font-size:18px}
+    .badge{font-size:12px; padding:4px 8px; border:1px solid #273349; border-radius:999px; color:#cbdcf5; display:inline-block; margin:4px 6px 10px 0}
+    .field{display:flex; gap:10px; align-items:center; margin:10px 0}
+    .field label{min-width:220px; color:var(--muted)}
+    .field input, .field select{flex:1; background:#0e141c; color:var(--ink); border:1px solid #243043; border-radius:10px; padding:10px 12px; outline:none}
+    .field input:focus, .field select:focus{border-color:var(--acc); box-shadow:0 0 0 4px var(--ring)}
+    .row{display:flex; gap:8px; flex-wrap:wrap}
+    .out{background:#0c1119; border:1px dashed #243043; padding:12px; border-radius:12px; color:#dbe8f7; font-family:ui-monospace,consolas,menlo,monaco,monospace}
+    .note{font-size:12px; color:#8fa0b6}
+    .err{color:var(--danger); font-weight:600}
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <div class="wrap">
+      <a class="btn" href="#water">Вода: плотность/расход/бак</a>
+      <a class="btn" href="#spr">Спринклеры: K‑фактор и давление</a>
+      <a class="btn" href="#gas_generic">Газ: масса агента (общая)</a>
+      <a class="btn" href="#gas_presets">Газ: подсказки по агентам</a>
+      <a class="btn" href="#enclosure">Объём помещения</a>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <h1>Калькулятор АПТ (газовое и водяное тушение)</h1>
+    <p class="lead">Быстрые инженерные оценки. Нормы и коэффициенты берите из вашего проекта/СП/НПБ/паспортов оборудования — здесь чистая математика с удобными полями.</p>
+
+    <!-- WATER: DENSITY / FLOW / TANK -->
+    <div id="water" class="card">
+      <h2>Водяное тушение: расход по плотности и объёму бака</h2>
+      <span class="badge">Q = D · A</span>
+      <span class="badge">V_бак = (Q + Q_рукава) · t</span>
+      <div class="field"><label>Плотность орошения D, л/(мин·м²) или мм/мин</label><input id="w_D" type="number" step="0.01" value="5"></div>
+      <div class="field"><label>Расчётная площадь A, м²</label><input id="w_A" type="number" step="0.1" value="200"></div>
+      <div class="field"><label>Доп. расход на рукава Qₕ, л/мин</label><input id="w_Qhose" type="number" step="1" value="0"></div>
+      <div class="field"><label>Длительность подачи t, мин</label><input id="w_t" type="number" step="1" value="30"></div>
+      <div class="row"><button class="btn primary" onclick="calcWater()">Рассчитать</button></div>
+      <div id="outWater" class="out">—</div>
+      <div class="note">Если D введено в мм/мин, это эквивалентно л/(мин·м²). Проверьте локальные нормы (плотности и t зависят от класса риска).</div>
+    </div>
+
+    <!-- SPRINKLER: K FACTOR / PRESSURE -->
+    <div id="spr" class="card">
+      <h2>Спринклеры: K‑фактор, давление и количество</h2>
+      <span class="badge">Q_одн = K·√P</span>
+      <div class="field"><label>Шаг установки (X×Y), м</label><input id="sp_step" type="text" value="3x3"></div>
+      <div class="field"><label>Площадь защищаемой зоны, м²</label><input id="sp_area" type="number" step="1" value="200"></div>
+      <div class="field"><label>Требуемая плотность D, л/(мин·м²)</label><input id="sp_D" type="number" step="0.01" value="5"></div>
+      <div class="field"><label>K‑фактор, (л/мин)/√бар</label><input id="sp_K" type="number" step="0.1" value="80"></div>
+      <div class="row"><button class="btn primary" onclick="calcSpr()">Рассчитать</button></div>
+      <div id="outSpr" class="out">—</div>
+      <div class="note">Давление указано на оросителе. Гидравлический расчёт сети выполняйте отдельно с потерями.</div>
+    </div>
+
+    <!-- GAS: GENERIC MASS -->
+    <div id="gas_generic" class="card">
+      <h2>Газовое тушение: оценка массы агента (общая модель)</h2>
+      <span class="badge">m = V_net · F · k_alt · k_temp · k_res</span>
+      <div class="field"><label>Тип агента</label>
+        <select id="g_agent">
+          <option value="custom">— Ввести вручную —</option>
+          <option value="fk512">FK-5-1-12 (Novec 1230)</option>
+          <option value="hfc227ea">HFC-227ea (FM-200)</option>
+          <option value="ig541">Inergen IG-541</option>
+          <option value="co2">CO₂</option>
+        </select>
+      </div>
+      <div class="field"><label>Объём помещения V_net, м³ (после вычета оборудования)</label><input id="g_V" type="number" step="0.1" value="300"></div>
+      <div class="field"><label>“Фактор затопления” F, кг/м³</label><input id="g_F" type="number" step="0.001" placeholder="из паспорта/каталога" value="0.055"></div>
+      <div class="field"><label>Поправка по высоте k_alt</label><input id="g_kalt" type="number" step="0.01" value="1.00"></div>
+      <div class="field"><label>Поправка по температуре k_temp</label><input id="g_kt" type="number" step="0.01" value="1.00"></div>
+      <div class="field"><label>Резерв k_res (запас: утечки, старение), 1.0…1.3</label><input id="g_kres" type="number" step="0.01" value="1.10"></div>
+      <div class="row"><button class="btn primary" onclick="calcGasMass()">Рассчитать массу</button></div>
+      <div id="outGas" class="out">—</div>
+      <div class="note">F (кг/м³) берётся из каталога производителя для заданной концентрации/температуры. Поправки и запасы — по проекту/стандарту.</div>
+    </div>
+
+    <!-- GAS: PRESETS HINTS (non‑normative) -->
+    <div id="gas_presets" class="card">
+      <h2>Подсказки по агентам (введите свои значения!)</h2>
+      <div class="out">
+        <ul>
+          <li><b>FK‑5‑1‑12</b>: типовой диапазон концентраций ~4.2–6% по объёму; для грубой оценки F ≈ 0.045–0.065 кг/м³ (уточняйте по производителю).</li>
+          <li><b>HFC‑227ea</b>: ~7–9% по объёму; часто F ≈ 0.07–0.10 кг/м³ (зависит от T/alt/класса пожара).</li>
+          <li><b>IG‑541/IG‑55</b> (инертные): вводите F по таблицам поставщика (обычно выше из‑за компримируемости). Нужны поправки на высоту.</li>
+          <li><b>CO₂</b>: для локальных/объёмных применений F сильно зависит от категории; используйте значения из НД/каталога и требования по эвакуации.</li>
+        </ul>
+      </div>
+      <div class="note">Эти диапазоны — ориентиры для начального подбора. Для рабочей документации обязательны расчёты по НД и проверка удержания.</div>
+    </div>
+
+    <!-- ROOM NET VOLUME -->
+    <div id="enclosure" class="card">
+      <h2>Объём помещения / чистый объём</h2>
+      <span class="badge">V_net = L·W·H · (1 − φ_заполнения)</span>
+      <div class="field"><label>Длина L, м</label><input id="v_L" type="number" step="0.01" value="10"></div>
+      <div class="field"><label>Ширина W, м</label><input id="v_W" type="number" step="0.01" value="8"></div>
+      <div class="field"><label>Высота H, м</label><input id="v_H" type="number" step="0.01" value="3.2"></div>
+      <div class="field"><label>Доля заполнения φ (0..1)</label><input id="v_phi" type="number" step="0.01" value="0.10"></div>
+      <div class="row"><button class="btn primary" onclick="calcVnet()">Рассчитать V_net</button></div>
+      <div id="outVnet" class="out">—</div>
+    </div>
+
+    <div class="card">
+      <h2>Вставка на вашу страницу</h2>
+      <div class="out"><code>&lt;a class="btn" href="calculators_apt.html" target="_blank" rel="noopener"&gt;Калькулятор АПТ (газ/вода)&lt;/a&gt;</code></div>
+    </div>
+  </div>
+
+<script>
+  const fmt=(x,d=3)=>isFinite(x)?Number(x).toLocaleString('ru-RU',{maximumFractionDigits:d}):'—';
+  const val=id=>parseFloat(document.getElementById(id).value);
+  const out=(id,html)=>document.getElementById(id).innerHTML=html;
+
+  // 1) Water density/flow/tank
+  function calcWater(){
+    const D=val('w_D');
+    const A=val('w_A');
+    const Qh=val('w_Qhose');
+    const t=val('w_t');
+    if(D<=0||A<=0||t<=0){ out('outWater','<span class="err">Проверьте ввод</span>'); return; }
+    const Q=D*A; // l/min
+    const V=(Q+Math.max(0,Qh))*t; // liters
+    const Q_lps = Q/60; // l/s
+    const V_m3 = V/1000; // m3
+    out('outWater', `Расход спринклеров Q ≈ <b>${fmt(Q,1)} л/мин</b> (<span class="note">${fmt(Q_lps,2)} л/с</span>)<br>Объём бака (с рукавами) V ≈ <b>${fmt(V_m3,2)} м³</b>`);
+  }
+
+  // 2) Sprinkler K/P/Count
+  function parseStep(stepStr){
+    const m = /([\d,.]+)x([\d,.]+)/i.exec(stepStr.trim());
+    if(!m) return null; return [parseFloat(m[1].replace(',','.')), parseFloat(m[2].replace(',','.'))];
+  }
+  function calcSpr(){
+    const stepStr=document.getElementById('sp_step').value;
+    const A=val('sp_area');
+    const D=val('sp_D');
+    const K=val('sp_K');
+    const step=parseStep(stepStr);
+    if(!step||A<=0||D<=0||K<=0){ out('outSpr','<span class="err">Проверьте ввод (пример шага 3x3)</span>'); return; }
+    const A1=step[0]*step[1];
+    const n=Math.ceil(A/A1);
+    const Q_total=D*A; // l/min
+    const Q_each=Q_total/n; // l/min
+    const P_bar=Math.pow(Q_each/K,2); // bar
+    out('outSpr', `Количество оросителей ≈ <b>${n} шт</b> (зона ${fmt(A1,2)} м²/шт)<br>Суммарный расход: <b>${fmt(Q_total,1)} л/мин</b>; на один ≈ <b>${fmt(Q_each,1)} л/мин</b><br>Требуемое давление на оросителе ≈ <b>${fmt(P_bar,2)} бар</b>`);
+  }
+
+  // 3) Gas mass (generic)
+  function calcGasMass(){
+    const agent=document.getElementById('g_agent').value;
+    const V=val('g_V');
+    let F=parseFloat(document.getElementById('g_F').value);
+    const k_alt=val('g_kalt');
+    const k_t=val('g_kt');
+    const k_res=val('g_kres');
+    if(V<=0||F<=0||k_alt<=0||k_t<=0||k_res<=0){ out('outGas','<span class="err">Проверьте ввод</span>'); return; }
+
+    // Optionally preload a hint F for known agents if user didn't change
+    const defaultByAgent={ fk512:0.055, hfc227ea:0.085, ig541:0.11, co2:0.18 };
+    if((document.getElementById('g_F').value||'').trim()==='' && defaultByAgent[agent]){
+      F=defaultByAgent[agent];
+    }
+
+    const m = V * F * k_alt * k_t * k_res; // kg
+    out('outGas', `Масса агента ≈ <b>${fmt(m,2)} кг</b><br><span class="note">Использован F=${fmt(F,3)} кг/м³; применены коэффициенты k_alt=${k_alt}, k_temp=${k_t}, k_res=${k_res}.</span>`);
+  }
+
+  // 4) Net room volume
+  function calcVnet(){
+    const L=val('v_L'), W=val('v_W'), H=val('v_H'), phi=val('v_phi');
+    if(L<=0||W<=0||H<=0||phi<0||phi>=1){ out('outVnet','<span class="err">Проверьте ввод</span>'); return; }
+    const V=L*W*H*(1-phi);
+    out('outVnet', `V_net ≈ <b>${fmt(V,2)} м³</b>`);
+  }
+</script>
+</body>
+</html>

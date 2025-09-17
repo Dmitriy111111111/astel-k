@@ -1,223 +1,233 @@
-
-
-  <h2>💨 Калькулятор расхода воздуха</h2>
-
-  <label>Тип канала:</label>
-  <select id="shape" onchange="toggleShapeFields()">
-    <option value="rectangular">Прямоугольный</option>
-    <option value="round">Круглый</option>
-  </select>
-
-  <div id="rectangular-fields">
-    <label>Ширина (мм):</label>
-    <input type="number" id="width" placeholder="например, 400">
-    <label>Высота (мм):</label>
-    <input type="number" id="height" placeholder="например, 200">
-  </div>
-
-  <div id="round-fields" style="display:none">
-    <label>Диаметр (мм):</label>
-    <input type="number" id="diameter" placeholder="например, 250">
-  </div>
-
-  <label>Что известно?</label>
-  <select id="known" onchange="toggleCalculationMode()">
-    <option value="velocity">Скорость (м/с)</option>
-    <option value="flow">Расход (м³/ч)</option>
-  </select>
-
-  <div id="velocity-input">
-    <label>Скорость воздуха (м/с):</label>
-    <input type="number" id="velocity" step="0.1">
-  </div>
-
-  <div id="flow-input" style="display:none">
-    <label>Расход воздуха (м³/ч):</label>
-    <input type="number" id="flowrate" step="0.1">
-  </div>
-
-  <button onclick="calculate()">Рассчитать</button>
-
-  <h3>Результат:</h3>
-  <p id="result"></p>
-
-  <script>
-    function toggleShapeFields() {
-      const shape = document.getElementById('shape').value;
-      document.getElementById('rectangular-fields').style.display = shape === 'rectangular' ? 'block' : 'none';
-      document.getElementById('round-fields').style.display = shape === 'round' ? 'block' : 'none';
-    }
-
-    function toggleCalculationMode() {
-      const known = document.getElementById('known').value;
-      document.getElementById('velocity-input').style.display = known === 'velocity' ? 'block' : 'none';
-      document.getElementById('flow-input').style.display = known === 'flow' ? 'block' : 'none';
-    }
-
-    function calculate() {
-      const shape = document.getElementById('shape').value;
-      const known = document.getElementById('known').value;
-      let area = 0;
-
-      // Площадь канала
-      if (shape === 'rectangular') {
-        const width = parseFloat(document.getElementById('width').value) / 1000;
-        const height = parseFloat(document.getElementById('height').value) / 1000;
-        if (isNaN(width) || isNaN(height)) {
-          document.getElementById('result').innerText = 'Введите размеры канала.';
-          return;
-        }
-        area = width * height;
-      } else {
-        const d = parseFloat(document.getElementById('diameter').value) / 1000;
-        if (isNaN(d)) {
-          document.getElementById('result').innerText = 'Введите диаметр канала.';
-          return;
-        }
-        area = Math.PI * (d / 2) ** 2;
-      }
-
-      // Расчёт
-      if (known === 'velocity') {
-        const v = parseFloat(document.getElementById('velocity').value);
-        if (isNaN(v)) {
-          document.getElementById('result').innerText = 'Введите скорость.';
-          return;
-        }
-        const q_m3s = v * area;
-        const q_m3h = q_m3s * 3600;
-        document.getElementById('result').innerHTML = 
-          `Расход: <strong>${q_m3s.toFixed(3)} м³/с</strong> или <strong>${q_m3h.toFixed(1)} м³/ч</strong>`;
-      } else {
-        const q_m3h = parseFloat(document.getElementById('flowrate').value);
-        if (isNaN(q_m3h)) {
-          document.getElementById('result').innerText = 'Введите расход.';
-          return;
-        }
-        const q_m3s = q_m3h / 3600;
-        const v = q_m3s / area;
-        document.getElementById('result').innerHTML = 
-          `Скорость: <strong>${v.toFixed(2)} м/с</strong> при расходе <strong>${q_m3h.toFixed(1)} м³/ч</strong>`;
-      }
-    }
-  </script>
-
-</body>
-</html>
-
-
-
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <title>Расчёт мощности теплообменника</title>
-  <style>
-    body { font-family: Arial; max-width: 500px; padding: 20px; }
-    label, input { display: block; width: 100%; margin-bottom: 10px; }
-    button { padding: 10px; }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ОВ — Набор калькуляторов (вентиляция/кондиционирование)</title>
+<style>
+  :root{--bg:#0b0c10;--fg:#e8e8e8;--muted:#a3a9b2;--card:#151820;--line:#243040;--accent:#4e9af1}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Arial}
+  .wrap{max-width:1200px;margin:28px auto;padding:0 14px}
+  h1{font-size:1.5rem;margin:6px 0 14px}
+  h3{margin:.2rem 0 .6rem}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:0 6px 24px rgba(0,0,0,.25)}
+  label{display:block;margin-bottom:6px;color:var(--muted)}
+  input,select,button{padding:10px 12px;border:1px solid #2b3240;border-radius:10px;background:#0e1118;color:var(--fg)}
+  input,select{width:100%}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .btn{background:var(--accent);border:0;cursor:pointer}
+  .muted{color:var(--muted)}
+  .mono{font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace}
+  .small{font-size:.9rem}
+  .out p{margin:.35rem 0}
+  details>summary{cursor:pointer}
+</style>
 </head>
 <body>
+<div class="wrap">
+  <h1>Калькуляторы для ОВ (вентиляция/кондиционирование)</h1>
+  <p class="muted" style="margin-top:-6px">Воздухообмен, расход по людям/площади, подбор воздуховода, потери давления, мощность нагрева/охлаждения. Единицы в СИ. При необходимости расширю под нормы РК (СП/СНиП).</p>
 
-  <h2>🔥 Калькулятор теплообменника</h2>
+  <!-- 0. Свойства воздуха -->
+  <div class="card">
+    <h3>0) Свойства воздуха (ρ и μ по температуре)</h3>
+    <div class="grid">
+      <div>
+        <label>Температура, °C</label>
+        <input id="air_T" type="number" step="any" value="20">
+      </div>
+      <div>
+        <label>Плотность ρ, кг/м³</label>
+        <input id="air_rho" type="number" step="any" value="1.204">
+      </div>
+      <div>
+        <label>Дин. вязкость μ, Па·с</label>
+        <input id="air_mu" type="number" step="any" value="1.81e-5">
+      </div>
+      <div>
+        <label>Теплоёмкость c<sub>p</sub>, кДж/(кг·К)</label>
+        <input id="air_cp" type="number" step="any" value="1.005">
+      </div>
+    </div>
+    <div class="row small muted" style="margin-top:8px">Типовые значения при 20 °C: ρ≈1.204 кг/м³, μ≈1.81×10⁻⁵ Па·с, c<sub>p</sub>≈1.005 кДж/(кг·К). Кнопки подставят справочные.</div>
+    <div class="row" style="margin-top:8px">
+      <button class="btn" onclick="setAirProps(0)">0 °C</button>
+      <button class="btn" onclick="setAirProps(10)">10 °C</button>
+      <button class="btn" onclick="setAirProps(20)">20 °C</button>
+      <button class="btn" onclick="setAirProps(30)">30 °C</button>
+    </div>
+  </div>
 
-  <label>Массовый расход теплоносителя (кг/с):</label>
-  <input type="number" id="massFlow" placeholder="например, 0.5">
+  <!-- 1. Воздухообмен по кратности -->
+  <div class="card">
+    <h3>1) Воздухообмен по объёму и кратности (ACH)</h3>
+    <div class="grid">
+      <div><label>Длина, м</label><input id="ach_L" type="number" step="any" value="6"></div>
+      <div><label>Ширина, м</label><input id="ach_W" type="number" step="any" value="4"></div>
+      <div><label>Высота, м</label><input id="ach_H" type="number" step="any" value="2.8"></div>
+      <div><label>Кратность ACH, 1/ч</label><input id="ach_n" type="number" step="any" value="2"></div>
+    </div>
+    <div class="row" style="margin-top:10px"><button class="btn" onclick="calcACH()">Рассчитать</button></div>
+    <div id="ach_out" class="out mono" style="margin-top:8px"></div>
+    <details class="small"><summary><b>Подсказка по ACH (ориентировочно)</b></summary>
+      <ul>
+        <li>Жилые комнаты: 0.5–2 1/ч</li><li>Офисы: 2–6 1/ч</li><li>Санузлы: 5–10 1/ч</li><li>Кухни: 6–15 1/ч</li>
+      </ul>
+    </details>
+  </div>
 
-  <label>Температура на входе (°C):</label>
-  <input type="number" id="tempIn" placeholder="например, 70">
+  <!-- 2. Воздухообмен по людям/площади -->
+  <div class="card">
+    <h3>2) Расход по людям и площади</h3>
+    <div class="grid">
+      <div><label>Число людей, чел</label><input id="occ_n" type="number" step="any" value="8"></div>
+      <div><label>Норма на человека, л/с·чел</label><input id="occ_Lp" type="number" step="any" value="10"></div>
+      <div><label>Площадь помещения, м²</label><input id="occ_A" type="number" step="any" value="48"></div>
+      <div><label>Норма на площадь, л/с·м²</label><input id="occ_La" type="number" step="any" value="0.3"></div>
+    </div>
+    <div class="row" style="margin-top:10px"><button class="btn" onclick="calcOcc()">Рассчитать</button></div>
+    <div id="occ_out" class="out mono" style="margin-top:8px"></div>
+    <p class="small muted">Итоговый приток = n·Lp + A·La. Подставьте нормы из вашего СП/СНиП/ASHRAE.</p>
+  </div>
 
-  <label>Температура на выходе (°C):</label>
-  <input type="number" id="tempOut" placeholder="например, 50">
+  <!-- 3. Подбор воздуховода по допустимой скорости -->
+  <div class="card">
+    <h3>3) Подбор воздуховода (по скорости) — круг/прямоугольник</h3>
+    <div class="grid">
+      <div><label>Расход воздуха, м³/ч</label><input id="ds_Q" type="number" step="any" value="1200"></div>
+      <div><label>Макс. скорость v<sub>max</sub>, м/с</label><input id="ds_vmax" type="number" step="any" value="4"></div>
+      <div><label>Форма</label>
+        <select id="ds_shape"><option value="round">Круглый</option><option value="rect">Прямоугольный</option></select>
+      </div>
+      <div><label>Прямоуг.: соотношение сторон a:b</label><input id="ds_ar" type="number" step="any" value="2"></div>
+    </div>
+    <div class="row" style="margin-top:10px"><button class="btn" onclick="calcDuctSize()">Подобрать</button></div>
+    <div id="ds_out" class="out mono" style="margin-top:8px"></div>
+    <p class="small muted">Рекомендации: магистраль 4–6 м/с, ответвления 2–4 м/с, решётки 1.5–2.5 м/с.</p>
+  </div>
 
-  <label>Теплоёмкость (по умолчанию 4180 Дж/кг·°C):</label>
-  <input type="number" id="cp" placeholder="например, 4180" value="4180">
+  <!-- 4. Потери давления и требуемый напор вентилятора -->
+  <div class="card">
+    <h3>4) Потери давления (Дарси—Вейсбах) и мощность вентилятора</h3>
+    <div class="grid">
+      <div><label>Диаметр D (круглый), мм</label><input id="pl_D" type="number" step="any" value="315"></div>
+      <div><label>Или прямоуг.: a×b, мм (оставьте D пустым)</label><input id="pl_ab" type="text" placeholder="например 400x200"></div>
+      <div><label>Длина L, м</label><input id="pl_L" type="number" step="any" value="25"></div>
+      <div><label>ΣK местных сопротивлений</label><input id="pl_K" type="number" step="any" value="3.0"></div>
+      <div><label>Шероховатость ε, мм</label><input id="pl_eps" type="number" step="any" value="0.15"></div>
+      <div><label>Расход, м³/ч</label><input id="pl_Q" type="number" step="any" value="1200"></div>
+      <div><label>КПД вентилятора η</label><input id="pl_eta" type="number" step="any" value="0.6"></div>
+    </div>
+    <div class="row" style="margin-top:10px"><button class="btn" onclick="calcPressureLoss()">Рассчитать</button></div>
+    <div id="pl_out" class="out mono" style="margin-top:8px"></div>
+    <p class="small muted">Для прямоугольника используется гидравлический диаметр D<sub>h</sub>=2ab/(a+b). f: ламинарный 64/Re, турбулентный — Хааланд.</p>
+  </div>
 
-  <button onclick="calculateHeat()">Рассчитать</button>
+  <!-- 5. Мощность нагрева/охлаждения по расходу и ΔT -->
+  <div class="card">
+    <h3>5) Мощность нагрева/охлаждения воздуха</h3>
+    <div class="grid">
+      <div><label>Расход, м³/ч</label><input id="hp_Q" type="number" step="any" value="1200"></div>
+      <div><label>ΔT, °C (нагр./охлажд.)</label><input id="hp_dT" type="number" step="any" value="10"></div>
+      <div><label>Плотность ρ, кг/м³</label><input id="hp_rho" type="number" step="any" value="1.204"></div>
+      <div><label>c<sub>p</sub>, кДж/(кг·К)</label><input id="hp_cp" type="number" step="any" value="1.005"></div>
+    </div>
+    <div class="row" style="margin-top:10px"><button class="btn" onclick="calcHeatPower()">Рассчитать</button></div>
+    <div id="hp_out" class="out mono" style="margin-top:8px"></div>
+    <p class="small muted">Формула: Q̇ = ρ · c<sub>p</sub> · V̇ · ΔT. Здесь V̇ — м³/с, результат в кВт (c<sub>p</sub> в кДж/(кг·К)). Для влажности/латентной тепловой нагрузки нужен отдельный расчёт (скажу — добавлю).</p>
+  </div>
+</div>
 
-  <h3>Результат:</h3>
-  <p id="result"></p>
+<script>
+const g=9.81;
+function fmt(x,d=3){ if(!Number.isFinite(x)) return '—'; const a=Math.abs(x); if(a!==0&&(a<1e-4||a>=1e6)) return x.toExponential(6); return x.toLocaleString('ru-RU',{maximumFractionDigits:d}); }
+function toNum(id){ return parseFloat(document.getElementById(id).value||'0'); }
+function setVal(id,v){ document.getElementById(id).value=String(v); }
 
-  <script>
-    function calculateHeat() {
-      const m = parseFloat(document.getElementById('massFlow').value);
-      const Tin = parseFloat(document.getElementById('tempIn').value);
-      const Tout = parseFloat(document.getElementById('tempOut').value);
-      const cp = parseFloat(document.getElementById('cp').value);
+function setAirProps(T){
+  const tbl={0:{rho:1.293,mu:1.71e-5},10:{rho:1.247,mu:1.76e-5},20:{rho:1.204,mu:1.81e-5},30:{rho:1.165,mu:1.86e-5}};
+  const p=tbl[T]; if(!p) return; setVal('air_T',T); setVal('air_rho',p.rho); setVal('air_mu',p.mu); setVal('air_cp',1.005);
+}
 
-      if (isNaN(m) || isNaN(Tin) || isNaN(Tout) || isNaN(cp)) {
-        document.getElementById('result').innerText = '❌ Заполните все поля.';
-        return;
-      }
+// 1) ACH
+function calcACH(){
+  const V=toNum('ach_L')*toNum('ach_W')*toNum('ach_H'); // м³
+  const n=toNum('ach_n');
+  const Q_m3h=V*n; const Q_ls=Q_m3h*1000/3600; // л/с
+  document.getElementById('ach_out').innerHTML=`V = ${fmt(V,2)} м³\nРасход = ${fmt(Q_m3h,2)} м³/ч  =  ${fmt(Q_ls,2)} л/с`;
+}
 
-      const deltaT = Tin - Tout;
-      const Q = m * cp * deltaT; // Вт
-      const Q_kW = Q / 1000;
+// 2) По людям/площади
+function calcOcc(){
+  const n=toNum('occ_n'), Lp=toNum('occ_Lp'), A=toNum('occ_A'), La=toNum('occ_La');
+  const Q_ls=n*Lp + A*La; const Q_m3h=Q_ls*3.6/1; // (л/с)*(3.6) = м³/ч
+  document.getElementById('occ_out').innerHTML=`Итого ${fmt(Q_ls,2)} л/с  →  ${fmt(Q_m3h,2)} м³/ч`;
+}
 
-      document.getElementById('result').innerHTML = 
-        `Мощность теплообменника: <strong>${Q.toFixed(0)} Вт</strong> или <strong>${Q_kW.toFixed(2)} кВт</strong>`;
+// Общие функции для гидравлики/аэродинамики
+function areaCircle(Dm){ return Math.PI*Dm*Dm/4; }
+function areaRect(a,b){ return a*b; }
+function reynolds(rho,v,Dh,mu){ return rho*v*Dh/mu; }
+function frictionFactor(Re,eps,Dh){ if(Re<2300) return 64/Re; const term=Math.pow((eps/Dh)/3.7,1.11)+6.9/Re; const inv=-1.8*Math.log10(term); return 1/(inv*inv); }
+function headLossFriction(f,L,Dh,v){ return f*(L/Dh)*(v*v)/(2*g); }
+function dpFromHead(h,rho){ return rho*g*h; }
+
+// 3) Подбор воздуховода
+function calcDuctSize(){
+  const Qm3h=toNum('ds_Q'); const vmax=toNum('ds_vmax'); const shape=document.getElementById('ds_shape').value; const ar=Math.max(0.5,Math.min(10, toNum('ds_ar')||2));
+  const Q=Qm3h/3600; // м³/с
+  if(Q<=0||vmax<=0){ document.getElementById('ds_out').textContent='Укажите расход и v_max'; return; }
+  if(shape==='round'){
+    // Подбор ряда диаметров (мм)
+    const series=[80,100,125,140,150,160,180,200,224,250,280,300,315,355,400,450,500,560,600,630,710,800,900,1000];
+    let best=null;
+    for(const dmm of series){ const D=dmm/1000; const v=Q/areaCircle(D); if(v<=vmax){ best={dmm,D,v}; break; } }
+    if(!best){ // если ни один не удовлетворяет, берём макс. и сообщаем
+      const dmm=series[series.length-1]; const D=dmm/1000; const v=Q/areaCircle(D); best={dmm,D,v};
     }
-  </script>
+    document.getElementById('ds_out').innerHTML=`Круглый D = ${best.dmm} мм → v = ${fmt(best.v,2)} м/с`;
+  } else {
+    // Подбор прямоугольника по v_max и отношению сторон a:b
+    // Ищем a,b кратные 25 мм в пределах 100..1600 мм
+    const step=25; let found=null; for(let a=100;a<=1600;a+=step){ let b=Math.round(a/ar/step)*step; if(b<100||b>1600) continue; const A=(a/1000)*(b/1000); const v=Q/A; if(v<=vmax){ found={a,b,A,v}; break; } }
+    if(!found){ document.getElementById('ds_out').innerHTML='Не найдено в диапазоне 100–1600 мм; увеличьте размеры или v_max.'; return; }
+    const Dh=2*(found.A)/((found.a/1000)+(found.b/1000));
+    document.getElementById('ds_out').innerHTML=`Прямоугольный ${found.a}×${found.b} мм → v = ${fmt(found.v,2)} м/с,  D_h ≈ ${fmt(Dh*1000,0)} мм`;
+  }
+}
 
-</body>
-</html>
+// 4) Потери давления
+function parseAB(ab){
+  if(!ab) return null; const m=ab.toLowerCase().replace(' ','').match(/(\d+(?:\.\d+)?)x(\d+(?:\.\d+)?)/); if(!m) return null; return {a:parseFloat(m[1])/1000,b:parseFloat(m[2])/1000};
+}
+function calcPressureLoss(){
+  const rho=toNum('air_rho'); const mu=toNum('air_mu');
+  const Q=toNum('pl_Q')/3600; const L=toNum('pl_L'); const K=toNum('pl_K'); const eps=toNum('pl_eps')/1000; const eta=Math.max(0.05,Math.min(0.9,toNum('pl_eta')||0.6));
+  let Dm=toNum('pl_D')/1000; let A,Dh;
+  const rect=parseAB(document.getElementById('pl_ab').value);
+  if(rect && !Dm){ A=areaRect(rect.a,rect.b); Dh=2*rect.a*rect.b/(rect.a+rect.b); }
+  else if(Dm){ A=areaCircle(Dm); Dh=Dm; }
+  else { document.getElementById('pl_out').textContent='Укажите D или a×b'; return; }
+  const v=Q/A; const Re=reynolds(rho,v,Dh,mu); const f=frictionFactor(Re,eps,Dh);
+  const hf=headLossFriction(f,L,Dh,v); const hminor=K*(v*v)/(2*g); const htot=hf+hminor; const dp=dpFromHead(htot,rho);
+  const P=dp*Q; const Pfan=P/eta;
+  document.getElementById('pl_out').innerHTML=
+    `v = ${fmt(v,2)} м/с,  Re = ${fmt(Re,0)},  f = ${fmt(f,5)}\nПотери: h_f = ${fmt(hf,3)} м, h_m = ${fmt(hminor,3)} м, h_tot = ${fmt(htot,3)} м\nΔp = ${fmt(dp,1)} Па  →  Мощность: гидр. ${fmt(P,1)} Вт, на валу (η=${fmt(eta,2)}) ≈ ${fmt(Pfan,1)} Вт`;
+}
 
+// 5) Нагрев/охлаждение
+function calcHeatPower(){
+  const Qm3h=toNum('hp_Q'); const dT=toNum('hp_dT'); const rho=toNum('hp_rho'); const cp=toNum('hp_cp');
+  const Vdot=Qm3h/3600; // м³/с
+  const mdot=rho*Vdot; // кг/с
+  const kW=mdot*cp*dT/1; // cp в кДж/(кг·К): кг/с * кДж/(кг·К) * К = кДж/с = кВт
+  document.getElementById('hp_out').innerHTML=`V̇ = ${fmt(Vdot,3)} м³/с,  ṁ = ${fmt(mdot,3)} кг/с\nQ̇ ≈ ${fmt(kW,2)} кВт`;
+}
 
-
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-  <meta charset="UTF-8">
-  <title>Калькулятор подбора охлаждающего блока</title>
-  <style>
-    body { font-family: Arial; max-width: 600px; margin: 20px auto; }
-    label, input { display: block; width: 100%; margin-bottom: 10px; }
-    button { padding: 10px; margin-top: 10px; }
-  </style>
-</head>
-<body>
-
-  <h2>❄️ Подбор охлаждающего блока</h2>
-
-  <label>Требуемая мощность охлаждения (кВт):</label>
-  <input type="number" id="requiredPower" placeholder="например, 18">
-
-  <button onclick="selectCoolingUnit()">Подобрать блок</button>
-
-  <h3>Результат:</h3>
-  <p id="result"></p>
-
-  <script>
-    function selectCoolingUnit() {
-      const requiredPower = parseFloat(document.getElementById('requiredPower').value);
-
-      if (isNaN(requiredPower) || requiredPower <= 0) {
-        document.getElementById('result').innerText = '❌ Введите корректную мощность.';
-        return;
-      }
-
-      // Таблица моделей
-      const units = [
-        { model: 'AC-100', power: 10, flow: 1000 },
-        { model: 'AC-200', power: 20, flow: 2000 },
-        { model: 'AC-300', power: 30, flow: 3000 },
-        { model: 'AC-500', power: 50, flow: 5000 }
-      ];
-
-      // Поиск подходящей модели
-      const selected = units.find(unit => unit.power >= requiredPower);
-
-      if (selected) {
-        document.getElementById('result').innerHTML =
-          `Рекомендуемый блок: <strong>${selected.model}</strong><br>` +
-          `Мощность: ${selected.power} кВт<br>` +
-          `Воздушный поток: ${selected.flow} м³/ч`;
-      } else {
-        document.getElementById('result').innerHTML = '❌ Нет подходящего блока. Требуется индивидуальный расчёт.';
-      }
-    }
-  </script>
-
+// Инициализация
+calcACH(); calcOcc(); calcDuctSize(); calcPressureLoss(); calcHeatPower();
+</script>
 </body>
 </html>
