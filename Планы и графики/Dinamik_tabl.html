@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
+  
   <meta charset="UTF-8">
   <title>Главная</title>
   <link rel="stylesheet" href="..\style.css">
-  <style>
+  
+  <style>y
     .center {
       text-align: center;
     }
@@ -15,6 +17,8 @@
       font-size: 16px;
     }
   </style>
+
+  
   <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
   <script type="text/javascript">
     google.charts.load('current', {'packages':['gantt']});
@@ -68,8 +72,16 @@
     <img src="..\logo-1.png" alt="HTML5" width="75">
     <h1>Bim инженеринг Астел-К</h1>
     <nav>
-      <a href="..\index.html">Главная</a>
-    
+      <a href="..\index.html">Главная </a>
+      <a href="..\HVAC.html">Инженерные сети</a>
+      <a href="..\Electrical.html">ОЭМ</a>
+      <a href="..\CC\АСУ.html">АСУ и СС</a>  
+      <a href="..\Для ГИПОВ\gip.html">Для ГИПОВ</a>
+      <a href="..\калькуляторы\Калькуляторы .html">Калькуляторы</a>
+      <a href="..\contact.html">Полезные ссылки</a>   
+      <a href="..\Планы и графики\Dinamik_tabl.html">Планы и графики</a>   
+      <a href="http://10.0.0.248:8001/ru/calendar/" target="_blank" rel="noopener noreferrer">Отчеты с офиса</a>
+      <a href="..\статьи.html">Статьи</a>   
     </nav>
   </header>
 
@@ -80,9 +92,38 @@
 </body>
 </html>
 
+<video autoplay muted loop id="bg-video">
+  <source src="pm.mp4" type="video/mp4">
+</video>
 
-<!DOCTYPE html>
-<html lang="ru">
+<script>
+  const v = document.getElementById('bg-video');
+  // сразу после вставки на страницу
+  v.playbackRate = 0.8;          // замедление до 0.5x
+  // на случай автозапуска — продублируем при готовности
+  v.addEventListener('canplay', () => v.playbackRate = 0.5, { once: true });
+</script>
+
+<style>
+#bg-video {
+  position: fixed;
+  top: 0;
+  left: 0;
+  min-width: 100%;
+  min-height: 100%;
+  object-fit: cover;
+  z-index: -1; /* фон позади контента */
+}
+body {
+  margin: 0;
+  padding: 0;
+}
+</style>
+
+
+
+
+
 <head>
   <meta charset="UTF-8">
   <title>Множественные диаграммы Ганта</title>
@@ -163,6 +204,9 @@
     }
   </script>
 </head>
+
+
+
 <body>
   <h2>Пример планирования проекта в BIM </h2>
   <div id="chart_div1"></div>
@@ -171,3 +215,41 @@
   <div id="chart_div2"></div>
 </body>
 </html>
+
+
+<video autoplay muted loop id="bg-video">
+  <source src="pm.mp4" type="video/mp4">
+</video>
+
+<script>
+  const v = document.getElementById('bg-video');
+  // сразу после вставки на страницу
+  v.playbackRate = 0.8;          // замедление до 0.5x
+  // на случай автозапуска — продублируем при готовности
+  v.addEventListener('canplay', () => v.playbackRate = 0.5, { once: true });
+</script>
+
+<style>
+#bg-video {
+  position: fixed;
+  top: 0;
+  left: 0;
+  min-width: 100%;
+  min-height: 100%;
+  object-fit: cover;
+  z-index: -1; /* фон позади контента */
+}
+body {
+  margin: 0;
+  padding: 0;
+}
+</style>
+
+
+ <footer>
+       <script>
+      fetch("data.j")
+    </script>
+
+    <p>&copy; BIM ear white </p>
+  </footer>
