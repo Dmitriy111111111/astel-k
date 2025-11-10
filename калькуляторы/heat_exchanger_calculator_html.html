@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Калькулятор теплообменника</title>
+  <style>
+    :root { --bg:#0b0f14; --card:#121821; --ink:#e9eef5; --muted:#9fb0c7; --accent:#4ea1ff; --ok:#2ecc71; --warn:#ffb04e; --err:#ff6b6b; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji"; background: var(--bg); color: var(--ink); }
+    .wrap { max-width: 1100px; margin: 24px auto; padding: 0 16px; }
+    h1 { font-size: 26px; margin: 0 0 14px 0; }
+    p.subtitle { margin-top: 0; color: var(--muted); }
+    .grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 14px; }
+    .card { background: var(--card); border: 1px solid #1f2835; border-radius: 14px; padding: 16px; }
+    .card h2 { margin-top: 0; font-size: 18px; }
+    .col-4 { grid-column: span 4; }
+    .col-8 { grid-column: span 8; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 10px; }
+    label { font-size: 13px; color: var(--muted); display:block; margin-bottom:6px; }
+    input, select { width: 100%; padding: 10px 10px; border-radius: 10px; border: 1px solid #253041; background: #0e141d; color: var(--ink); }
+    .inline { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .btn { border: none; padding: 10px 14px; background: var(--accent); color: #001327; border-radius: 10px; font-weight: 600; cursor:pointer; }
+    .btn.secondary { background: #233249; color: var(--ink); }
+    .muted { color: var(--muted); font-size: 13px; }
+    .results { line-height:1.65; }
+    .pill { display:inline-block; padding: 3px 8px; border-radius: 999px; background:#0f1b2a; border:1px solid #233249; color:var(--muted); font-size:12px; }
+    .status-ok { color: var(--ok); }
+    .status-warn { color: var(--warn); }
+    .status-err { color: var(--err); }
+    .kpi { display:grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap:12px; margin-top:12px; }
+    .kpi .item { background:#0e141d; border:1px solid #1f2835; border-radius:12px; padding:12px; }
+    .kpi .label { font-size:12px; color:var(--muted); }
+    .kpi .value { font-size:18px; font-weight:700; margin-top:4px; }
+    code { background:#0e141d; padding:2px 6px; border-radius:6px; border:1px solid #1f2835; }
+    @media (max-width: 900px){ .col-4, .col-8 { grid-column: span 12; } .row{ grid-template-columns: 1fr; } .kpi{ grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Калькулятор теплообменника</h1>
+    <p class="subtitle">Однофазный теплообмен (без фазовых переходов), метод <b>ε–NTU</b> + расчёт LMTD. Работает для <b>противотока</b> и <b>прямотока</b>.</p>
+
+    <div class="grid">
+      <div class="card col-4">
+        <h2>Исходные данные</h2>
+        <div class="row">
+          <div>
+            <label>Режим</label>
+            <select id="mode">
+              <option value="byArea">1) Известны U и A → найти T<sub>out</sub>, Q</option>
+              <option value="byTarget">2) Подбор A под требуемую T<sub>out</sub></option>
+            </select>
+          </div>
+          <div>
+            <label>Схема</label>
+            <select id="flowType">
+              <option value="counter">Противоток</option>
+              <option value="parallel">Прямоток</option>
+            </select>
+          </div>
+        </div>
+
+        <h3>Горячий поток</h3>
+        <div class="row">
+          <div>
+            <label>T<sub>h,in</sub>, °C</label>
+            <input id="Th_in" type="number" step="0.1" value="80" />
+          </div>
+          <div>
+            <label>ṁ<sub>h</sub>, кг/с</label>
+            <input id="mh" type="number" step="0.001" value="1.5" />
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label>c<sub>p,h</sub>, Дж/(кг·К)</label>
+            <input id="cph" type="number" step="1" value="4180" />
+          </div>
+          <div>
+            <label>(необ.) желаемая T<sub>h,out</sub>, °C</label>
+            <input id="Th_out_target" type="number" step="0.1" placeholder="— для режима 2" />
+          </div>
+        </div>
+
+        <h3>Холодный поток</h3>
+        <div class="row">
+          <div>
+            <label>T<sub>c,in</sub>, °C</label>
+            <input id="Tc_in" type="number" step="0.1" value="20" />
+          </div>
+          <div>
+            <label>ṁ<sub>c</sub>, кг/с</label>
+            <input id="mc" type="number" step="0.001" value="1.8" />
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label>c<sub>p,c</sub>, Дж/(кг·К)</label>
+            <input id="cpc" type="number" step="1" value="4180" />
+          </div>
+          <div>
+            <label>(необ.) желаемая T<sub>c,out</sub>, °C</label>
+            <input id="Tc_out_target" type="number" step="0.1" placeholder="— для режима 2" />
+          </div>
+        </div>
+
+        <h3>Теплопередача</h3>
+        <div class="row">
+          <div>
+            <label>U, Вт/(м²·К)</label>
+            <input id="U" type="number" step="1" value="800" />
+          </div>
+          <div>
+            <label>A, м² <span class="muted">(для режима 1)</span></label>
+            <input id="A" type="number" step="0.01" value="10" />
+          </div>
+        </div>
+
+        <div class="inline" style="margin-top:10px;">
+          <button class="btn" id="calcBtn">Рассчитать</button>
+          <button class="btn secondary" id="resetBtn" title="Сбросить на значения по умолчанию">Сброс</button>
+          <span id="status" class="pill">Готово</span>
+        </div>
+        <p class="muted" style="margin-top:8px;">Подсказка: режим 1 — известны <code>U</code> и <code>A</code>. Режим 2 — задайте желаемую <code>T<sub>h,out</sub></code> или <code>T<sub>c,out</sub></code>, найдём требуемую площадь.</p>
+      </div>
+
+      <div class="card col-8">
+        <h2>Результаты</h2>
+        <div id="results" class="results">
+          <p class="muted">Заполните поля и нажмите <b>Рассчитать</b>.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:14px;">
+      <h2>Формулы (коротко)</h2>
+      <ul>
+        <li>C<sub>h</sub>=ṁ<sub>h</sub>·c<sub>p,h</sub>, C<sub>c</sub>=ṁ<sub>c</sub>·c<sub>p,c</sub>, C<sub>min</sub>=min(C<sub>h</sub>,C<sub>c</sub>), C<sub>max</sub>=max(...), C<sub>r</sub>=C<sub>min</sub>/C<sub>max</sub>.</li>
+        <li>NTU = U·A / C<sub>min</sub>.</li>
+        <li>Эффективность ε (ε–NTU):
+          <ul>
+            <li>Противоток: ε = (1 − e^{−NTU·(1−C<sub>r</sub>)}) / (1 − C<sub>r</sub>·e^{−NTU·(1−C<sub>r</sub>)})</li>
+            <li>Прямоток: ε = (1 − e^{−NTU·(1+C<sub>r</sub>)}) / (1 + C<sub>r</sub>)</li>
+          </ul>
+        </li>
+        <li>Q<sub>max</sub>=C<sub>min</sub>(T<sub>h,in</sub>−T<sub>c,in</sub>), Q=ε·Q<sub>max</sub>.</li>
+        <li>T<sub>h,out</sub>=T<sub>h,in</sub>−Q/C<sub>h</sub>, T<sub>c,out</sub>=T<sub>c,in</sub>+Q/C<sub>c</sub>.</li>
+        <li>LMTD = (ΔT<sub>1</sub> − ΔT<sub>2</sub>)/ln(ΔT<sub>1</sub>/ΔT<sub>2</sub>), где ΔT берутся по выбранной схеме потока.</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    const $ = sel => document.querySelector(sel);
+
+    function num(v){ const x = Number(v); return Number.isFinite(x) ? x : NaN; }
+    function fmt(v, d=2){ return Number.isFinite(v) ? v.toFixed(d) : "—"; }
+
+    function effectiveness(NTU, Cr, type){
+      if (!Number.isFinite(NTU) || !Number.isFinite(Cr)) return NaN;
+      if (NTU < 0) return NaN;
+      if (type === 'parallel'){
+        return (1 - Math.exp(-NTU*(1+Cr))) / (1 + Cr);
+      } else { // counterflow
+        if (Math.abs(1-Cr) < 1e-9){ // Cr -> 1, предельный случай
+          // Предел при Cr→1: ε = NTU / (1 + NTU)
+          return NTU / (1 + NTU);
+        }
+        const t = Math.exp(-NTU*(1 - Cr));
+        return (1 - t) / (1 - Cr*t);
+      }
+    }
+
+    function invertNTU(eps, Cr, type){
+      // Численное решение NTU по заданной ε (дихотомия)
+      // Диапазон поиска NTU: [0, 60] (для инженерных задач обычно хватает)
+      let lo = 0, hi = 60, mid = 0;
+      for (let i=0;i<80;i++){
+        mid = 0.5*(lo+hi);
+        const f = effectiveness(mid, Cr, type) - eps;
+        const flo = effectiveness(lo, Cr, type) - eps;
+        if (Math.sign(f) === Math.sign(flo)) lo = mid; else hi = mid;
+      }
+      return mid;
+    }
+
+    function lmtd(dT1, dT2){
+      if (dT1 <= 0 || dT2 <= 0 || !isFinite(dT1) || !isFinite(dT2)) return NaN;
+      if (Math.abs(dT1 - dT2) < 1e-12) return dT1; // предел
+      return (dT1 - dT2) / Math.log(dT1 / dT2);
+    }
+
+    function compute(){
+      const mode = $('#mode').value; // byArea | byTarget
+      const flowType = $('#flowType').value; // counter | parallel
+
+      const Th_in = num($('#Th_in').value);
+      const Tc_in = num($('#Tc_in').value);
+      const mh = num($('#mh').value);
+      const mc = num($('#mc').value);
+      const cph = num($('#cph').value);
+      const cpc = num($('#cpc').value);
+      const U = num($('#U').value);
+      const A = num($('#A').value);
+      const Th_out_target = num($('#Th_out_target').value);
+      const Tc_out_target = num($('#Tc_out_target').value);
+
+      // Валидация базовая
+      const status = $('#status');
+      status.textContent = 'Расчёт…';
+
+      if ([Th_in, Tc_in, mh, mc, cph, cpc, U].some(v=>!isFinite(v))){
+        status.textContent = 'Ошибка: проверьте ввод.'; status.className = 'pill status-err'; return;
+      }
+      if (Th_in <= Tc_in){
+        status.textContent = 'Внимание: T_h,in ≤ T_c,in — физически допустимо, но проверьте данные.'; status.className = 'pill status-warn';
+      } else {
+        status.className = 'pill';
+      }
+
+      const Ch = mh * cph;
+      const Cc = mc * cpc;
+      const Cmin = Math.min(Ch, Cc);
+      const Cmax = Math.max(Ch, Cc);
+      const Cr = Cmin / Cmax;
+      const DTin = Th_in - Tc_in;
+      const Qmax = Cmin * DTin; // Дж/с = Вт
+
+      let Th_out, Tc_out, Q, eps, NTU, Areq;
+
+      if (mode === 'byArea'){
+        if (!isFinite(A) || A <= 0){ $('#status').textContent='Укажите площадь A (>0)'; status.className='pill status-err'; return; }
+        NTU = U * A / Cmin;
+        eps = effectiveness(NTU, Cr, flowType);
+        Q = eps * Qmax;
+        Th_out = Th_in - Q / Ch;
+        Tc_out = Tc_in + Q / Cc;
+      } else { // byTarget
+        // Пользователь может задать либо Th_out_target, либо Tc_out_target (или оба)
+        const hasTh = isFinite(Th_out_target);
+        const hasTc = isFinite(Tc_out_target);
+        if (!hasTh && !hasTc){ $('#status').textContent='Задайте желаемую T_h,out или T_c,out'; status.className='pill status-err'; return; }
+
+        if (hasTc){
+          Q = Cc * (Tc_out_target - Tc_in);
+        } else {
+          Q = Ch * (Th_in - Th_out_target);
+        }
+        // Проверки достижимости
+        if (!isFinite(Q)) { $('#status').textContent='Неверная целевая температура'; status.className='pill status-err'; return; }
+        if (Q <= 0){ $('#status').textContent='Требуемая температура не повышает холодный поток / не охлаждает горячий'; status.className='pill status-warn'; }
+        if (Q > Qmax + 1e-6){ $('#status').textContent='Недостижимо: Q > Qmax'; status.className='pill status-err'; return; }
+
+        eps = Q / Qmax;
+        NTU = invertNTU(eps, Cr, flowType);
+        Areq = NTU * Cmin / U;
+
+        // Рассчитать фактические выходные температуры для отчёта
+        Th_out = Th_in - Q / Ch;
+        Tc_out = Tc_in + Q / Cc;
+      }
+
+      // LMTD для справки
+      let dT1, dT2;
+      if (flowType === 'parallel'){
+        dT1 = Math.abs(Th_in - Tc_in);
+        dT2 = Math.abs(Th_out - Tc_out);
+      } else {
+        // противоток: на одном конце Th_in~Tc_out, на другом Th_out~Tc_in
+        dT1 = Math.abs(Th_in - Tc_out);
+        dT2 = Math.abs(Th_out - Tc_in);
+      }
+      const LMTD = lmtd(dT1, dT2);
+
+      const html = `
+        <div class="kpi">
+          <div class="item"><div class="label">Тепловая нагрузка Q</div><div class="value">${fmt(Q/1000,3)} кВт</div></div>
+          <div class="item"><div class="label">T<sub>h,out</sub></div><div class="value">${fmt(Th_out,2)} °C</div></div>
+          <div class="item"><div class="label">T<sub>c,out</sub></div><div class="value">${fmt(Tc_out,2)} °C</div></div>
+        </div>
+        <div class="kpi">
+          <div class="item"><div class="label">C<sub>h</sub>, C<sub>c</sub></div><div class="value">${fmt(Ch,0)} / ${fmt(Cc,0)} Вт/К</div></div>
+          <div class="item"><div class="label">C<sub>r</sub> = C<sub>min</sub>/C<sub>max</sub></div><div class="value">${fmt(Cr,3)}</div></div>
+          <div class="item"><div class="label">ε (эффективность)</div><div class="value">${fmt(eps,3)}</div></div>
+        </div>
+        <div class="kpi">
+          <div class="item"><div class="label">NTU</div><div class="value">${fmt(NTU,3)}</div></div>
+          <div class="item"><div class="label">LMTD</div><div class="value">${fmt(LMTD,2)} К</div></div>
+          <div class="item"><div class="label">${mode==='byArea' ? 'Введённая площадь A' : 'Требуемая площадь A'}</div><div class="value">${fmt(mode==='byArea'?A:Areq,3)} м²</div></div>
+        </div>
+        <p class="muted">Примечание: расчёт по ε–NTU. LMTD показан для справки по полученным T<sub>out</sub>. Для пластинчатых Т/О с большими отклонениями от идеальной схемы может потребоваться поправочный коэффициент.</p>
+      `;
+
+      $('#results').innerHTML = html;
+      if (mode === 'byArea') status.textContent = 'Готово (режим 1)'; else status.textContent = 'Готово (режим 2)';
+      status.className = 'pill';
+    }
+
+    function reset(){
+      $('#mode').value = 'byArea';
+      $('#flowType').value = 'counter';
+      $('#Th_in').value = 80;
+      $('#Tc_in').value = 20;
+      $('#mh').value = 1.5;
+      $('#mc').value = 1.8;
+      $('#cph').value = 4180;
+      $('#cpc').value = 4180;
+      $('#U').value = 800;
+      $('#A').value = 10;
+      $('#Th_out_target').value = '';
+      $('#Tc_out_target').value = '';
+      $('#results').innerHTML = '<p class="muted">Сброшено. Нажмите <b>Рассчитать</b>.</p>';
+      const status = $('#status');
+      status.textContent = 'Готово'; status.className = 'pill';
+    }
+
+    $('#calcBtn').addEventListener('click', compute);
+    $('#resetBtn').addEventListener('click', reset);
+  </script>
+</body>
+</html>
