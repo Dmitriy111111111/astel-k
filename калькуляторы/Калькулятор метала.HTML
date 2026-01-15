@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Калькулятор</title>
+
+    <!-- 1) Подключение библиотеки -->
+    <script src="https://calcus.ru/dist/widget.js"></script>
+</head>
+
+<body>
+    <h1>Калькулятор металла</h1>
+
+    <!-- 2) Контейнер -->
+    <div id="calcus-container"></div>
+
+    <!-- 3) Инициализация -->
+    <script>
+        const options = {
+            // сюда добавляются настройки (значения по умолчанию, скрытие полей и т.д.)
+        };
+
+        // Важно: id контейнера по умолчанию "calcus-container"
+        CalcusWidget.show('Metal', options);
+    </script>
+</body>
+</html>
